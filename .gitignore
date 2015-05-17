@@ -73,3 +73,18 @@ $RECYCLE.BIN/
 
 # Windows shortcuts
 *.lnk
+
+
+
+# VC++
+
+*.nativecodeanalysis.xml
+*.1.tlog
+*.lastcodeanalysissucceeded
+HexEditor.sdf
+HexEditor.opensdf
+HexEditor.log
+vc120.pdb
+vc120.idb
+*.lastbuildstate
+

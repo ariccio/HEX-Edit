@@ -283,7 +283,7 @@ void MultiTypeCombo::decode(tComboInfo* info, eCodingType type)
 
 			codePage = (IsTextUnicode(info->text, info->length, &uniMask) != 0) ? CP_ACP:CP_UTF8;
 			length = ::WideCharToMultiByte(codePage, 0, (WCHAR*)info->text, -1, buffer, 256, NULL, NULL) - 1;
-
+			
 			if ((nppCoding == HEX_CODE_NPP_ASCI) || 
 				(nppCoding == HEX_CODE_NPP_UTF8) || 
 				(nppCoding == HEX_CODE_NPP_UTF8_BOM))

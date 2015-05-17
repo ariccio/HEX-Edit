@@ -2220,8 +2220,8 @@ void HexEdit::Delete(void)
 	/* get horizontal and vertical gap size */
 	if (_pCurProp->selection == HEX_SEL_BLOCK)
 	{
-		count = abs(_pCurProp->anchorPos  - _pCurProp->cursorPos);
-		lines = abs(_pCurProp->anchorItem - _pCurProp->cursorItem);
+		count = abs(static_cast<int>(_pCurProp->anchorPos)  - static_cast<int>(_pCurProp->cursorPos));
+		lines = abs(static_cast<int>(_pCurProp->anchorItem) - static_cast<int>(_pCurProp->cursorItem));
 	}
 	else
 	{
@@ -3870,7 +3870,8 @@ void HexEdit::ToggleBookmark(UINT iItem)
 	{
 		if (_pCurProp->vBookmarks[i].iItem == iItem) {
 			/* if bookmark exists delete it from list */
-			_pCurProp->vBookmarks.erase(&_pCurProp->vBookmarks[i]);
+			//_pCurProp->vBookmarks.erase(&_pCurProp->vBookmarks[i]); //WTF is this shit??!?
+			_pCurProp->vBookmarks.erase(_pCurProp->vBookmarks.begin()+i);
 			isChanged = TRUE;
 		}
 		else if (_pCurProp->vBookmarks[i].iItem > iItem) {
@@ -3915,7 +3916,8 @@ void HexEdit::UpdateBookmarks(UINT firstAdd, INT length)
 
 			if ((_pCurProp->vBookmarks[i].lAddress == firstAdd) && (length < 0)) {
 				/* remove bookmark if is in a delete section */
-				_pCurProp->vBookmarks.erase(&_pCurProp->vBookmarks[i]);
+				//_pCurProp->vBookmarks.erase(&_pCurProp->vBookmarks[i]);//WTF IS GOING ON!!
+				_pCurProp->vBookmarks.erase(_pCurProp->vBookmarks.begin()+i);
 				i--;
 			} else if ((UINT)_pCurProp->vBookmarks[i].lAddress > firstAdd) {
 				/* calculate new addresses of bookmarks behind the first address */
@@ -3927,7 +3929,8 @@ void HexEdit::UpdateBookmarks(UINT firstAdd, INT length)
 
 				/* if some data was deleted and the changed item matches with the privious one delete it */
 				if ((i != 0) && (_pCurProp->vBookmarks[i].lAddress == _pCurProp->vBookmarks[i-1].lAddress)) {
-					_pCurProp->vBookmarks.erase(&_pCurProp->vBookmarks[i]);
+					//_pCurProp->vBookmarks.erase(&_pCurProp->vBookmarks[i]);//WTF IS THIS!
+					_pCurProp->vBookmarks.erase(_pCurProp->vBookmarks.begin()+i);
 					i--;
 				}
 

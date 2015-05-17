@@ -773,7 +773,7 @@ void FindReplaceDlg::getSelText(tComboInfo* info)
 	::SendMessage(_hParentHandle, HEXM_GETSEL, (WPARAM)&posBeg, (LPARAM)&posEnd);
 
 	INT	offset	= (INT)(posBeg < posEnd ? posBeg : posEnd);
-	INT	length	= (abs(posEnd-posBeg) > COMBO_STR_MAX ? COMBO_STR_MAX : abs(posEnd-posBeg));
+	INT	length	= (abs(static_cast<int>(posEnd)-static_cast<int>(posBeg)) > COMBO_STR_MAX ? COMBO_STR_MAX : abs(static_cast<int>(posEnd)-static_cast<int>(posBeg)));
 	info->length = length;
 
 	if (info->length != 0)
