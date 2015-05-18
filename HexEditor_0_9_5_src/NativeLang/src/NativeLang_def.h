@@ -254,7 +254,7 @@ static void NLChangeCombo(HINSTANCE hInst, HWND hNpp, HWND hCombo, LPCTSTR pszSe
  *
  * @note		Format tags are supported. Use % instead of \, e.g. %t %s %d %n
  */
-static UINT NLGetText(HINSTANCE hInst, HWND hNpp, LPCTSTR pszKey, LPTSTR pszText, UINT length)
+static UINT NLGetText(HINSTANCE hInst, HWND hNpp, LPCTSTR pszKey, _Out_writes_z_( length ) LPTSTR pszText, UINT length)
 {
 	TCHAR		szPath[MAX_PATH] = { 0 };
 	::GetModuleFileName(hInst, szPath, MAX_PATH);

@@ -23,7 +23,7 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #include "Window.h"
 #include "Hex.h"
 #include <vector>
-using namespace std;
+//using namespace std;
 
 
 typedef enum
@@ -78,13 +78,13 @@ typedef union {
 
 #define	CB_GETCOMBOBOXINFO	0x0164
 
-class MultiTypeCombo : public Window
+class MultiTypeCombo final : public Window
 {
 public :
 	MultiTypeCombo();
     ~MultiTypeCombo () {};
 	virtual void init(HWND hNpp, HWND hCombo);
-	virtual void destroy() {
+	virtual void destroy() override{
 		DestroyWindow(_hSelf);
 	};
 
@@ -111,7 +111,7 @@ private :
     WNDPROC					_hDefaultComboProc;
 
 	tComboInfo				_currData;
-	vector<tEncComboInfo>	_comboItems;
+	std::vector<tEncComboInfo>	_comboItems;
 	eCodingType				_currDataType;
 
 	eNppCoding				_docCodePage;

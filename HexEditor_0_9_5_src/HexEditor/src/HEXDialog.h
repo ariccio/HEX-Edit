@@ -32,7 +32,7 @@
 
 #include "tables.h"
 
-using namespace std;
+//using namespace std;
 
 #include "HEXResource.h"
 
@@ -357,7 +357,18 @@ private:
 	BOOL OnCharItem(WPARAM wParam, LPARAM lParam);
 	void SelectItem(UINT iItem, UINT iSubItem, INT iCursor = 0);
 	void DrawItemText(HDC hDc, DWORD item, INT subItem);
-	void DrawPartOfItemText(HDC hDc, RECT rc, RECT rcText, LPTSTR text, UINT beg, UINT length, eSelItem sel, eSelType type);
+	
+
+	void DrawPartOfItemText(HDC hDc, RECT rc, RECT rcText, _In_reads_z_( bufferCount ) PCTSTR text, UINT beg, UINT length, eSelItem sel, eSelType type, rsize_t bufferCount);
+	
+	
+	template<size_t count>
+	void DrawPartOfItemText(HDC hDc, RECT rc, RECT rcText, _In_z_ TCHAR (&text)[count], UINT beg, UINT length, eSelItem sel, eSelType type) {
+		DrawPartOfItemText( hDc, rc, rcText, text, beg, length, sel, type, count );
+		}
+
+
+	
 
 	/* for edit in dump */
 	void OnMouseClickDump(WPARAM wParam, LPARAM lParam);

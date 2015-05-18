@@ -2840,7 +2840,7 @@ void HexEdit::DrawItemText(HDC hDc, DWORD item, INT subItem)
 	}
 }
 
-void HexEdit::DrawPartOfItemText(HDC hDc, RECT rc, RECT rcText, LPTSTR text, UINT beg, UINT length, eSelItem sel, eSelType type)
+void HexEdit::DrawPartOfItemText(HDC hDc, RECT rc, RECT rcText, _In_reads_z_( bufferCount ) LPCTSTR text, UINT beg, UINT length, eSelItem sel, eSelType type, rsize_t bufferCount)
 {
 	SIZE		size		= {0};
 	UINT		diff		= 0;
