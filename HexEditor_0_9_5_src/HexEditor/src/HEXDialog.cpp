@@ -1412,8 +1412,8 @@ void HexEdit::Paste(void)
 			/* if test again and extract informations */
 			UINT	lineCnt		= ScintillaMsg(hSciTgt, SCI_GETLINECOUNT);
 			UINT	charPerLine	= ScintillaMsg(hSciTgt, SCI_LINELENGTH, 0);
-			LPSTR	buffer		= (LPSTR)new CHAR[charPerLine+1];
-			LPSTR   target		= (LPSTR)new CHAR[charPerLine*lineCnt+1];
+			LPSTR	buffer		= new CHAR[charPerLine+1];
+			LPSTR   target		= new CHAR[charPerLine*lineCnt+1];
             
             if ((buffer != NULL) && (target != NULL))
             {
@@ -1491,10 +1491,12 @@ void HexEdit::Paste(void)
 
 			/* remove resources */
 			if (buffer != NULL) {
-				delete buffer;
+				delete[] buffer;
+				buffer = nullptr;
 			}
 			if (target != NULL) {
-				delete target;
+				delete[] target;
+				target = nullptr;
 			}
 		}
 		else
