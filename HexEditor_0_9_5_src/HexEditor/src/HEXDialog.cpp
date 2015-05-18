@@ -2274,7 +2274,7 @@ void HexEdit::DrawAddressText(HDC hDc, DWORD iItem)
 	RECT		rc		= {0};
 	SIZE		size	= {0};
     COLORREF    color   = getColor(HEX_COLOR_REG_TXT);
-	TCHAR		text[17];
+	TCHAR		text[17] = { 0 };
 
 	/* get list information */
 	ListView_GetItemText(_hListCtrl, iItem, 0, text, 17);
@@ -2599,7 +2599,7 @@ void HexEdit::DrawItemText(HDC hDc, DWORD item, INT subItem)
 	RECT		rc;
 	RECT		rcText;
 	SIZE		size;
-	TCHAR		text[65];
+	TCHAR		text[65] = { 0 };
 	RECT		rcCursor;
 
 	/* get list informations */
@@ -3348,7 +3348,7 @@ INT HexEdit::CalcCursorPos(LV_HITTESTINFO info)
 {
 	RECT			rc;
 	SIZE			size;
-	TCHAR			text[128];
+	TCHAR			text[128] = { 0 };
 	UINT			cursorPos;
 
 	/* get dc for calculate the font size */

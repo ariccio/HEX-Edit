@@ -302,7 +302,8 @@ size_t Utf8_16_Write::convert(char* p, size_t _size)
 {
 	if (m_pNewBuf)
     {
-		delete [] m_pNewBuf;
+		delete[] m_pNewBuf;
+		m_pNewBuf = nullptr;
 	}
 
     switch (m_eEncoding)
@@ -311,7 +312,7 @@ size_t Utf8_16_Write::convert(char* p, size_t _size)
         case eUtf8Plain: {
             // Normal write
             m_nBufSize = _size;
-            m_pNewBuf = (ubyte*)new ubyte[m_nBufSize];
+            m_pNewBuf = new ubyte[m_nBufSize];
             memcpy(m_pNewBuf, p, _size);
             break;
         }
@@ -319,7 +320,7 @@ size_t Utf8_16_Write::convert(char* p, size_t _size)
 			if (m_bIsBOM)
 			{
 				m_nBufSize = _size + 3;
-				m_pNewBuf = (ubyte*)new ubyte[m_nBufSize];
+				m_pNewBuf = new ubyte[m_nBufSize];
 				memcpy(m_pNewBuf, k_Boms[m_eEncoding], 3);
 				memcpy(&m_pNewBuf[3], p, _size);
 			}
@@ -327,14 +328,14 @@ size_t Utf8_16_Write::convert(char* p, size_t _size)
 			{
 				// Normal write
 				m_nBufSize = _size;
-				m_pNewBuf = (ubyte*)new ubyte[m_nBufSize];
+				m_pNewBuf = new ubyte[m_nBufSize];
 				memcpy(m_pNewBuf, p, _size);
 			}
             break;
         }
         case eUtf16BigEndian:
         case eUtf16LittleEndian: {
-            m_pNewBuf = (ubyte*)new ubyte[sizeof(utf16) * (_size + 1)];
+            m_pNewBuf = new ubyte[sizeof(utf16) * (_size + 1)];
             
             if (m_bIsBOM && (m_eEncoding == eUtf16BigEndian || m_eEncoding == eUtf16LittleEndian)) {
                 // Write the BOM

@@ -1001,7 +1001,7 @@ void SystemUpdate(void)
 
 	UINT		oldSC		= currentSC;
 	UINT		newDocCnt	= 0;
-	TCHAR		pszNewPath[MAX_PATH];
+	TCHAR		pszNewPath[MAX_PATH] = { 0 };
 
 	/* update open files */
 	UpdateCurrentHScintilla();

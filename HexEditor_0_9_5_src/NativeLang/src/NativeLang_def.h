@@ -78,7 +78,7 @@ typedef struct tNatLangInfo {
  */
 static void NLChangeDialog(HINSTANCE hInst, HWND hNpp, HWND hWnd, LPCTSTR pszSection)
 {
-	TCHAR		szPath[MAX_PATH];
+	TCHAR		szPath[MAX_PATH] = { 0 };
 	::GetModuleFileName((HMODULE)hInst, szPath, MAX_PATH);
 
 	tNatLangInfo		nli;
@@ -114,7 +114,7 @@ static void NLChangeDialog(HINSTANCE hInst, HWND hNpp, HWND hWnd, LPCTSTR pszSec
  */
 static void NLChangeNppMenu(HINSTANCE hInst, HWND hNpp, LPCTSTR pszPluginName, FuncItem* funcItem, UINT nbFunc)
 {
-	TCHAR		szPath[MAX_PATH];
+	TCHAR		szPath[MAX_PATH] = { 0 };
 	::GetModuleFileName((HMODULE)hInst, szPath, MAX_PATH);
 
 	tNatLangInfo		nli;
@@ -151,7 +151,7 @@ static void NLChangeNppMenu(HINSTANCE hInst, HWND hNpp, LPCTSTR pszPluginName, F
  */
 static BOOL NLChangeMenu(HINSTANCE hInst, HWND hNpp, HMENU hMenu, LPCTSTR pszMenu, UINT mf_ByComPos)
 {
-	TCHAR		szPath[MAX_PATH];
+	TCHAR		szPath[MAX_PATH] = { 0 };
 	::GetModuleFileName((HMODULE)hInst, szPath, MAX_PATH);
 
 	tNatLangInfo		nli;
@@ -187,7 +187,7 @@ static BOOL NLChangeMenu(HINSTANCE hInst, HWND hNpp, HMENU hMenu, LPCTSTR pszMen
  */
 static void NLChangeHeader(HINSTANCE hInst, HWND hNpp, HWND hHeader, LPCTSTR pszSection)
 {
-	TCHAR		szPath[MAX_PATH];
+	TCHAR		szPath[MAX_PATH] = { 0 };
 	::GetModuleFileName((HMODULE)hInst, szPath, MAX_PATH);
 
 	tNatLangInfo		nli;
@@ -220,7 +220,7 @@ static void NLChangeHeader(HINSTANCE hInst, HWND hNpp, HWND hHeader, LPCTSTR psz
  */
 static void NLChangeCombo(HINSTANCE hInst, HWND hNpp, HWND hCombo, LPCTSTR pszSection, UINT count)
 {
-	TCHAR		szPath[MAX_PATH];
+	TCHAR		szPath[MAX_PATH] = { 0 };
 	::GetModuleFileName((HMODULE)hInst, szPath, MAX_PATH);
 
 	tNatLangInfo		nli;
@@ -256,8 +256,8 @@ static void NLChangeCombo(HINSTANCE hInst, HWND hNpp, HWND hCombo, LPCTSTR pszSe
  */
 static UINT NLGetText(HINSTANCE hInst, HWND hNpp, LPCTSTR pszKey, LPTSTR pszText, UINT length)
 {
-	TCHAR		szPath[MAX_PATH];
-	::GetModuleFileName((HMODULE)hInst, szPath, MAX_PATH);
+	TCHAR		szPath[MAX_PATH] = { 0 };
+	::GetModuleFileName(hInst, szPath, MAX_PATH);
 
 	tNatLangInfo		nli;
 	nli.hCtrl			= NULL;

@@ -416,9 +416,6 @@ void ClearMenuStructures(void)
 
 void GetShortCuts(HWND hWnd)
 {
-    TCHAR   text[64];
-    LPTSTR  pSc     = NULL;
-    LPTSTR  pScKey  = NULL;
     UINT    max     = sizeof(g_scList) / sizeof(tShortCut);
     HMENU   hMenu   = (HMENU)::SendMessage(hWnd, NPPM_INTERNAL_GETMENU, 0, 0);
  
@@ -428,31 +425,38 @@ void GetShortCuts(HWND hWnd)
     for (UINT i = 0; i < max; i++)
     {
         g_scList[i].isEnable = FALSE;
+        TCHAR text[64] = { 0 };
         if (::GetMenuString(hMenu, g_scList[i].uID, text, 64, MF_BYCOMMAND) != 0)
         {
-            pSc = &(_tcsstr(text, _T("\t")))[1];
-            if (pSc != NULL) {
-                g_scList[i].isEnable = TRUE;
-                pScKey = _tcsstr(pSc, _T("Ctrl+"));
-                if (pScKey != NULL) {
-                    g_scList[i].scKey._isCtrl = TRUE;
-                    pSc = pScKey + _tcslen(_T("Ctrl+"));
-                }
-                pScKey = _tcsstr(pSc, _T("Alt+"));
-                if (pScKey != NULL) {
-                    g_scList[i].scKey._isAlt = TRUE;
-                    pSc = pScKey + _tcslen(_T("Alt+"));
-                }
-                pScKey = _tcsstr(pSc, _T("Shift+"));
-                if (pScKey != NULL) {
-                    g_scList[i].scKey._isShift = TRUE;
-                    pSc = pScKey + _tcslen(_T("Shift+"));
-                }
-                for (UINT j = 0; j < nrKeys; j++) {
-                    if (_tcscmp(pSc, namedKeyArray[j].name) == NULL) {
-                        g_scList[i].scKey._key = namedKeyArray[j].id;
-                        break;
-                    }
+            _Null_terminated_ const TCHAR tabChar[] = _T( "\t" );
+            PCTSTR temppSc = _tcsstr(text, tabChar);
+            if (temppSc == NULL) {
+                continue;
+            }
+            PCTSTR pSc = &(temppSc)[1];
+            if (pSc == NULL) {
+                continue;
+            }
+            g_scList[i].isEnable = TRUE;
+            PCTSTR pScKey = _tcsstr(pSc, _T("Ctrl+"));
+            if (pScKey != NULL) {
+                g_scList[i].scKey._isCtrl = TRUE;
+                pSc = pScKey + _tcslen(_T("Ctrl+"));
+            }
+            pScKey = _tcsstr(pSc, _T("Alt+"));
+            if (pScKey != NULL) {
+                g_scList[i].scKey._isAlt = TRUE;
+                pSc = pScKey + _tcslen(_T("Alt+"));
+            }
+            pScKey = _tcsstr(pSc, _T("Shift+"));
+            if (pScKey != NULL) {
+                g_scList[i].scKey._isShift = TRUE;
+                pSc = pScKey + _tcslen(_T("Shift+"));
+            }
+            for (UINT j = 0; j < nrKeys; j++) {
+                if (_tcscmp(pSc, namedKeyArray[j].name) == NULL) {
+                    g_scList[i].scKey._key = namedKeyArray[j].id;
+                    break;
                 }
             }
         }
