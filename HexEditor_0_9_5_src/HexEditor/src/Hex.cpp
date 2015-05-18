@@ -36,9 +36,38 @@
 #include <shlobj.h>
 #include <assert.h>
 
+
+
+namespace {
+	const TCHAR addWidth[]		= _T("Address Width");
+	const TCHAR columns[]		= _T("Columns");
+	const TCHAR bits[]			= _T("Bits");
+	const TCHAR bin[]			= _T("Binary");
+	const TCHAR little[]		= _T("Little");
+	const TCHAR fontname[]		= _T("Font Name");
+	const TCHAR fontsize[]		= _T("Font Size");
+	const TCHAR bold[]			= _T("Bold");
+	const TCHAR italic[]		= _T("Italic");
+	const TCHAR underline[]		= _T("Underline");
+	const TCHAR capital[]		= _T("Capitel");
+	const TCHAR extensions[]	= _T("Extensions");
+	const TCHAR rgbRegTxt[]		= _T("RGB Regular Text");
+	const TCHAR rgbRegBk[]		= _T("RGB Regular Background");
+	const TCHAR rgbSelTxt[]		= _T("RGB Selection Text");
+	const TCHAR rgbSelBk[]		= _T("RGB Selection Background");
+	const TCHAR rgbDiffTxt[]	= _T("RGB Difference Text");
+	const TCHAR rgbDiffBk[]		= _T("RGB Difference Background");
+	const TCHAR rgbBkMkTxt[]	= _T("RGB Bookmark Text");
+	const TCHAR rgbBkMkBk[]		= _T("RGB Bookmark Background");
+	const TCHAR rgbCurLine[]	= _T("RGB Current Line");
+	const TCHAR percent[]		= _T("Autostart Percent");
+	const TCHAR focusRect[]		= _T("Focus Rect");
+	const TCHAR HEXEDIT_INI[]	= _T("\\HexEditor.ini");
+	const TCHAR COMPARE_PATH[]	= _T("\\Compare");
+	}
+
 /* menu entry count */
-const
-INT				nbFunc	= 9;
+const INT				nbFunc	= 9;
 
 /* for subclassing */
 WNDPROC	wndProcNotepad = NULL;

@@ -21,6 +21,12 @@
 
 #define LINE_OFFSET	1
 
+
+namespace {
+	const TCHAR gotoProp[]		= _T("GotoIsHex");
+	
+	}
+
 void GotoDlg::doDialog(HWND hHexEdit)
 {
     if (!isCreated())
