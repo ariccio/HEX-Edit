@@ -282,8 +282,8 @@ void MultiTypeCombo::decode(tComboInfo* info, eCodingType type)
 			memset(buffer, 0, COMBO_STR_MAX);
 
 			codePage = (IsTextUnicode(info->text, info->length, &uniMask) != 0) ? CP_ACP:CP_UTF8;
-			length = ::WideCharToMultiByte(codePage, 0, (WCHAR*)info->text, -1, buffer, 256, NULL, NULL) - 1;
-			//length = ::WideCharToMultiByte(codePage, 0, (WCHAR*)info->text, -1, buffer, 256, NULL, NULL);
+			//length = ::WideCharToMultiByte(codePage, 0, (WCHAR*)info->text, -1, buffer, 256, NULL, NULL) - 1;
+			length = ::WideCharToMultiByte(codePage, 0, (WCHAR*)info->text, -1, buffer, 256, NULL, NULL);
 			//unsigned integer zero, minus one, 
 			
 			if ((nppCoding == HEX_CODE_NPP_ASCI) || 
