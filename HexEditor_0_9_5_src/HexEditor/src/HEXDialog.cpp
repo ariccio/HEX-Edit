@@ -4194,7 +4194,7 @@ void HexEdit::SetStatusBar(void)
 		/* set mode */
 		::SendMessage(_hParent, NPPM_SETSTATUSBAR, STATUSBAR_DOC_TYPE, (LPARAM)_T("Hex Edit View"));
 		/* set doc length */
-		_stprintf(buffer, _T("nb char : %d"), _currLength);
+		_stprintf(buffer, _T("nb char : %u"), _currLength);
 		::SendMessage(_hParent, NPPM_SETSTATUSBAR, STATUSBAR_DOC_SIZE, (LPARAM)buffer);
 
 		/* set doc length */
