@@ -211,7 +211,7 @@ LRESULT URLCtrl::runProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 			    else
 			    {
                     TCHAR szWinText[_MAX_PATH];
-                    ::GetWindowText(hwnd, szWinText, sizeof szWinText);
+                    ::GetWindowText(hwnd, szWinText, (sizeof(szWinText)/sizeof(szWinText[0])));
                     ::ShellExecute(NULL, _T("open"), szWinText, NULL, NULL, SW_SHOWNORMAL);
 			    }
 		    }
