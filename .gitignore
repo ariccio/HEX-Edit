@@ -77,14 +77,18 @@ $RECYCLE.BIN/
 
 
 # VC++
-
 *.nativecodeanalysis.xml
-*.1.tlog
-*.lastcodeanalysissucceeded
+vc.nativecodeanalysis.all.xml
+NativeCodeAnalysis.read.1.tlog
+.1.tlog
+HexEditor.dll.lastcodeanalysissucceeded
 HexEditor.sdf
 HexEditor.opensdf
 HexEditor.log
+HexEditor.tlog
+HexEditor.exp
 vc120.pdb
 vc120.idb
-*.lastbuildstate
-./HexEditor_0_9_5_src/HexEditor/projects/2003/Debug/HexEditor.Build.CppClean.log
+HexEditor.ilk
+HexDialog.res
+HexEditor.v12.suo
