@@ -149,7 +149,7 @@ BOOL CALLBACK HexEdit::run_dlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARA
 
 						if (lvItem->mask & LVIF_TEXT)
 						{
-							ReadArrayToList(text, lvItem->iItem ,lvItem->iSubItem);
+							ReadArrayToList(text, ( sizeof(text) / sizeof(text[0]) ), lvItem->iItem ,lvItem->iSubItem);
 #ifdef UNICODE
 							static WCHAR wText[129] = _T("\0");
 							::MultiByteToWideChar(CP_ACP, 0, text, -1, wText, 129);
@@ -785,7 +785,7 @@ LRESULT HexEdit::runProcList(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPar
 }
 
 
-void HexEdit::UpdateDocs(const PCTSTR* pFiles, UINT numFiles, INT openDoc)
+void HexEdit::UpdateDocs(_In_reads_(numFiles) const PCTSTR* pFiles, UINT numFiles, INT openDoc)
 {
 	/* update current visible line */
 	GetLineVis();
@@ -811,7 +811,7 @@ void HexEdit::UpdateDocs(const PCTSTR* pFiles, UINT numFiles, INT openDoc)
 			/* attach new file */
 			tHexProp	prop = getProp();
 
-			_tcscpy(prop.szFileName, pFiles[i]);
+			_tcscpy_s(prop.szFileName, pFiles[i]);
 			prop.isModified		= FALSE;
 			prop.fontZoom		= 0;
 			prop.pCmpResult		= NULL;
@@ -1039,9 +1039,9 @@ void HexEdit::UpdateHeader(BOOL isFirstTime)
 		for (SHORT i = 0; i < _pCurProp->columns; i++)
 		{
 			if (getCLM()) {
-				_stprintf(temp, _T("%X"), i * _pCurProp->bits);
+				_stprintf_s(temp, _T("%X"), i * _pCurProp->bits);
 			} else {
-				_stprintf(temp, _T("%x"), i * _pCurProp->bits);
+				_stprintf_s(temp, _T("%x"), i * _pCurProp->bits);
 			}
 			ColSetupTermin.mask			= LVCF_TEXT | LVCF_FMT | LVCF_WIDTH;
 			ColSetupTermin.fmt			= LVCFMT_CENTER;
@@ -1470,7 +1470,7 @@ void HexEdit::Paste(void)
 					{
 						isOk = FALSE;
 						TCHAR	TEMP[256];
-						_stprintf(TEMP, _T("%S %d\n"), buffer, ASCIIConvert(buffer)/0x10);
+						_stprintf_s(TEMP, _T("%S %d\n"), buffer, ASCIIConvert(buffer)/0x10);
 						OutputDebugString(TEMP);
 					}
 				}
@@ -1748,7 +1748,7 @@ void HexEdit::ZoomRestore(void)
 }
 
 
-void HexEdit::ReadArrayToList(LPSTR text, INT iItem, INT iSubItem)
+void HexEdit::ReadArrayToList(_Out_writes_z_( bufferSize ) LPSTR text, const rsize_t bufferSize, INT iItem, INT iSubItem)
 {
 	if (_pCurProp == NULL)
 		return;
@@ -1759,36 +1759,36 @@ void HexEdit::ReadArrayToList(LPSTR text, INT iItem, INT iSubItem)
 		if (getCLM()) {
 			switch (_pCurProp->addWidth)
 			{
-				case 4: sprintf(text, "%04X", iItem * VIEW_ROW); break;
-				case 5: sprintf(text, "%05X", iItem * VIEW_ROW); break;
-				case 6: sprintf(text, "%06X", iItem * VIEW_ROW); break;
-				case 7: sprintf(text, "%07X", iItem * VIEW_ROW); break;
-				case 8: sprintf(text, "%08X", iItem * VIEW_ROW); break;
-				case 9: sprintf(text, "%09X", iItem * VIEW_ROW); break;
-				case 10: sprintf(text, "%010X", iItem * VIEW_ROW); break;
-				case 11: sprintf(text, "%011X", iItem * VIEW_ROW); break;
-				case 12: sprintf(text, "%012X", iItem * VIEW_ROW); break;
-				case 13: sprintf(text, "%013X", iItem * VIEW_ROW); break;
-				case 14: sprintf(text, "%014X", iItem * VIEW_ROW); break;
-				case 15: sprintf(text, "%015X", iItem * VIEW_ROW); break;
-				case 16: sprintf(text, "%016X", iItem * VIEW_ROW); break;
+				case 4: sprintf_s(text, bufferSize, "%04X", iItem * VIEW_ROW); break;
+				case 5: sprintf_s(text, bufferSize, "%05X", iItem * VIEW_ROW); break;
+				case 6: sprintf_s(text, bufferSize, "%06X", iItem * VIEW_ROW); break;
+				case 7: sprintf_s(text, bufferSize, "%07X", iItem * VIEW_ROW); break;
+				case 8: sprintf_s(text, bufferSize, "%08X", iItem * VIEW_ROW); break;
+				case 9: sprintf_s(text, bufferSize, "%09X", iItem * VIEW_ROW); break;
+				case 10: sprintf_s(text, bufferSize, "%010X", iItem * VIEW_ROW); break;
+				case 11: sprintf_s(text, bufferSize, "%011X", iItem * VIEW_ROW); break;
+				case 12: sprintf_s(text, bufferSize, "%012X", iItem * VIEW_ROW); break;
+				case 13: sprintf_s(text, bufferSize, "%013X", iItem * VIEW_ROW); break;
+				case 14: sprintf_s(text, bufferSize, "%014X", iItem * VIEW_ROW); break;
+				case 15: sprintf_s(text, bufferSize, "%015X", iItem * VIEW_ROW); break;
+				case 16: sprintf_s(text, bufferSize, "%016X", iItem * VIEW_ROW); break;
 			}
 		} else {
 			switch (_pCurProp->addWidth)
 			{
-				case 4: sprintf(text, "%04x", iItem * VIEW_ROW); break;
-				case 5: sprintf(text, "%05x", iItem * VIEW_ROW); break;
-				case 6: sprintf(text, "%06x", iItem * VIEW_ROW); break;
-				case 7: sprintf(text, "%07x", iItem * VIEW_ROW); break;
-				case 8: sprintf(text, "%08x", iItem * VIEW_ROW); break;
-				case 9: sprintf(text, "%09x", iItem * VIEW_ROW); break;
-				case 10: sprintf(text, "%010x", iItem * VIEW_ROW); break;
-				case 11: sprintf(text, "%011x", iItem * VIEW_ROW); break;
-				case 12: sprintf(text, "%012x", iItem * VIEW_ROW); break;
-				case 13: sprintf(text, "%013x", iItem * VIEW_ROW); break;
-				case 14: sprintf(text, "%014x", iItem * VIEW_ROW); break;
-				case 15: sprintf(text, "%015x", iItem * VIEW_ROW); break;
-				case 16: sprintf(text, "%016x", iItem * VIEW_ROW); break;
+				case 4: sprintf_s(text, bufferSize, "%04x", iItem * VIEW_ROW); break;
+				case 5: sprintf_s(text, bufferSize, "%05x", iItem * VIEW_ROW); break;
+				case 6: sprintf_s(text, bufferSize, "%06x", iItem * VIEW_ROW); break;
+				case 7: sprintf_s(text, bufferSize, "%07x", iItem * VIEW_ROW); break;
+				case 8: sprintf_s(text, bufferSize, "%08x", iItem * VIEW_ROW); break;
+				case 9: sprintf_s(text, bufferSize, "%09x", iItem * VIEW_ROW); break;
+				case 10: sprintf_s(text, bufferSize, "%010x", iItem * VIEW_ROW); break;
+				case 11: sprintf_s(text, bufferSize, "%011x", iItem * VIEW_ROW); break;
+				case 12: sprintf_s(text, bufferSize, "%012x", iItem * VIEW_ROW); break;
+				case 13: sprintf_s(text, bufferSize, "%013x", iItem * VIEW_ROW); break;
+				case 14: sprintf_s(text, bufferSize, "%014x", iItem * VIEW_ROW); break;
+				case 15: sprintf_s(text, bufferSize, "%015x", iItem * VIEW_ROW); break;
+				case 16: sprintf_s(text, bufferSize, "%016x", iItem * VIEW_ROW); break;
 			}
 		}
 	}
@@ -1837,7 +1837,7 @@ void HexEdit::ReadArrayToList(LPSTR text, INT iItem, INT iSubItem)
 }
 
 
-void HexEdit::AddressConvert(LPSTR text, INT length)
+void HexEdit::AddressConvert(_In_reads_(length) LPSTR text, _In_range_(0, 65) INT length)
 {
 	CHAR temp[65];
     
@@ -1847,18 +1847,18 @@ void HexEdit::AddressConvert(LPSTR text, INT length)
 	{
 		if (_pCurProp->isBin)
 		{
-			strcpy(text, binMask[(UCHAR)temp[--length]]);
+			strcpy_s(text, length, binMask[(UCHAR)temp[--length]]);
 			for (INT i = length-1; i >= 0; --i)
 			{
-				strcat(text, binMask[(UCHAR)temp[i]]);
+				strcat_s(text, length, binMask[(UCHAR)temp[i]]);
 			}
 		}
 		else
 		{
-			strcpy(text, hexMask[(UCHAR)temp[--length]]);
+			strcpy_s(text, length, hexMask[(UCHAR)temp[--length]]);
 			for (INT i = length-1; i >= 0; --i)
 			{
-				strcat(text, hexMask[(UCHAR)temp[i]]);
+				strcat_s(text, length, hexMask[(UCHAR)temp[i]]);
 			}
 		}
 	}
@@ -1866,24 +1866,24 @@ void HexEdit::AddressConvert(LPSTR text, INT length)
 	{
 		if (_pCurProp->isBin)
 		{
-			strcpy(text, binMask[(UCHAR)temp[0]]);
+			strcpy_s(text, length, binMask[(UCHAR)temp[0]]);
 			for (INT i = 1; i < length; i++)
 			{
-				strcat(text, binMask[(UCHAR)temp[i]]);
+				strcat_s(text, length, binMask[(UCHAR)temp[i]]);
 			}
 		}
 		else
 		{
-			strcpy(text, hexMask[(UCHAR)temp[0]]);
+			strcpy_s(text, length, hexMask[(UCHAR)temp[0]]);
 			for (INT i = 1; i < length; i++)
 			{
-				strcat(text, hexMask[(UCHAR)temp[i]]);
+				strcat_s(text, length, hexMask[(UCHAR)temp[i]]);
 			}
 		}
 	}
 }
 
-void HexEdit::DumpConvert(LPSTR text, UINT length)
+void HexEdit::DumpConvert(_In_reads_(length) LPSTR text, UINT length)
 {
 	if (_pCurProp->isLittle == FALSE)
 	{
@@ -1931,7 +1931,7 @@ void HexEdit::DumpConvert(LPSTR text, UINT length)
 }
 
 
-void HexEdit::BinHexConvert(LPSTR text, INT length)
+void HexEdit::BinHexConvert(_In_reads_( length ) LPSTR text, _In_range_(0, 65) INT length)
 {
 	CHAR temp[65];
 
@@ -2000,13 +2000,13 @@ void HexEdit::TrackMenu(POINT pt)
 	::AppendMenu(hSubMenu, MF_SEPARATOR, 0, _T("-----------------"));
 	/* set binary decoding */
 	if (NLGetText(_hInst, _hParent, _pCurProp->isBin == TRUE ? _T("to Hex"):_T("to Binary"), txtMenu, sizeof(txtMenu)) == FALSE)
-		_tcscpy(txtMenu, _pCurProp->isBin == TRUE ? _T("to Hex"):_T("to Binary"));
+		_tcscpy_s(txtMenu, _pCurProp->isBin == TRUE ? _T("to Hex"):_T("to Binary"));
 	::AppendMenu(hSubMenu, MF_STRING, 11, txtMenu);
 	/* change between big- and little-endian */
 	if (_pCurProp->bits > HEX_BYTE)
 	{
 		if (NLGetText(_hInst, _hParent, _pCurProp->isLittle == TRUE ? _T("to BigEndian"):_T("to LittleEndian"), txtMenu, sizeof(txtMenu)) == FALSE)
-			_tcscpy(txtMenu, _pCurProp->isLittle == TRUE ? _T("to BigEndian"):_T("to LittleEndian"));
+			_tcscpy_s(txtMenu, _pCurProp->isLittle == TRUE ? _T("to BigEndian"):_T("to LittleEndian"));
 		::AppendMenu(hSubMenu, MF_STRING, 12, txtMenu);
 	}
 
@@ -4200,11 +4200,11 @@ void HexEdit::SetStatusBar(void)
 		/* set mode */
 		::SendMessage(_hParent, NPPM_SETSTATUSBAR, STATUSBAR_DOC_TYPE, (LPARAM)_T("Hex Edit View"));
 		/* set doc length */
-		_stprintf(buffer, _T("nb char : %u"), _currLength);
+		_stprintf_s(buffer, _T("nb char : %u"), _currLength);
 		::SendMessage(_hParent, NPPM_SETSTATUSBAR, STATUSBAR_DOC_SIZE, (LPARAM)buffer);
 
 		/* set doc length */
-		_stprintf(buffer, _T("Ln : %u    Col : %u    Sel : %u"), 
+		_stprintf_s(buffer, _T("Ln : %u    Col : %u    Sel : %u"), 
 			_pCurProp->cursorItem + 1, 
 			(GetCurrentPos() % VIEW_ROW) + 1,
 			(GetCurrentPos() > GetAnchor() ? GetCurrentPos()-GetAnchor() : GetAnchor()-GetCurrentPos()));

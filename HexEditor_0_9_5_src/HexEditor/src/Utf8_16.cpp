@@ -218,8 +218,9 @@ Utf8_16_Write::~Utf8_16_Write()
 	fclose();
 }
 
-FILE * Utf8_16_Write::fopen(const char *_name, const char *_type)
+FILE * Utf8_16_Write::fopen(_In_z_ const char *_name, _In_z_ const char *_type)
 {
+#pragma warning(suppress:4996)
 	m_pFile = ::fopen(_name, _type);
 
 	m_bFirstWrite = true;

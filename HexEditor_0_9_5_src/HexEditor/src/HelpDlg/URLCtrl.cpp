@@ -99,7 +99,7 @@ void URLCtrl::create(HWND itemHandle, LPTSTR link, COLORREF linkColor)
 
 	// set the URL text (not the display text)
 	if (link)
-		_tcscpy(_URL, link);
+		_tcscpy_s(_URL, link);
 
 	// set the hyperlink colour
     _linkColor = linkColor;

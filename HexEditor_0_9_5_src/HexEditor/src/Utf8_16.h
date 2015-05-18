@@ -145,7 +145,7 @@ public:
 	void setEncoding(encodingType eType);
 	void disableBOM(void) { m_bIsBOM = false; };
 
-	FILE * fopen(const char *_name, const char *_type);
+	FILE * fopen(_In_z_ const char *_name, _In_z_ const char *_type);
 	size_t fwrite(const void* p, size_t _size);
 	void   fclose();
 

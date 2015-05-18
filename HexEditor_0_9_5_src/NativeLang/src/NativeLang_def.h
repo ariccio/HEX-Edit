@@ -301,8 +301,9 @@ static INT NLMessageBox(HINSTANCE hInst, HWND hNpp, LPCTSTR pszKey, UINT uType, 
 	LPTSTR	wPtr = NULL;
 	TCHAR	text[MAX_PATH]	= {0};
 	if (NLGetText(hInst, hNpp, pszKey, text, MAX_PATH)) {
-		wPtr = _tcstok(text, _T("\t"));
-		wPtr = _tcstok(NULL, _T("\t"));
+		TCHAR* nextToken = NULL;
+		wPtr = _tcstok_s(text, _T("\t"), &nextToken);
+		wPtr = _tcstok_s(NULL, _T("\t"), &nextToken);
 		return ::MessageBox(hDlg, text, wPtr, uType);
 	}
 	return FALSE;

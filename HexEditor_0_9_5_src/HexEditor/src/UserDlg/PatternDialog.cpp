@@ -26,7 +26,7 @@ extern char	hexMask[256][3];
 void PatternDlg::patternReplace(HWND hHexEdit)
 {
 	if (NLGetText(_hInst, _hParent, _T("Pattern Replace"), _txtCaption, sizeof(_txtCaption)) == 0) {
-		_tcscpy(_txtCaption, _T("Pattern Replace"));
+		_tcscpy_s(_txtCaption, _T("Pattern Replace"));
 	}
 
 	doDialog(hHexEdit);
@@ -42,7 +42,7 @@ void PatternDlg::patternReplace(HWND hHexEdit)
 void PatternDlg::insertColumns(HWND hHexEdit)
 {
 	if (NLGetText(_hInst, _hParent, _T("Insert Columns"), _txtCaption, sizeof(_txtCaption)) == 0) {
-		_tcscpy(_txtCaption, _T("Insert Columns"));
+		_tcscpy_s(_txtCaption, _T("Insert Columns"));
 	}
 
 	doDialog(hHexEdit);
@@ -176,9 +176,9 @@ BOOL PatternDlg::onInsert(void)
 		TCHAR	txtMsgBox[MAX_PATH];
 
 		if (NLGetText(_hInst, _hParent, _T("Pos Between"), buffer, sizeof(buffer)) == 0) {
-			_stprintf(txtMsgBox, _T("Only column position between 0 and %d possible."), prop.columns);
+			_stprintf_s(txtMsgBox, _T("Only column position between 0 and %d possible."), prop.columns);
 		} else {
-			_stprintf(txtMsgBox, buffer, prop.columns);
+			_stprintf_s(txtMsgBox, buffer, prop.columns);
 		}
 		::MessageBox(_hParent, txtMsgBox, _T("Hex-Editor"), MB_OK|MB_ICONERROR);
 		return bRet;

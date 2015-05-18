@@ -68,14 +68,14 @@ public:
 
    	void doDialog(BOOL toggle = FALSE);
 
-	void UpdateDocs(const PCTSTR* pFiles, UINT numFiles, INT openDoc);
+	void UpdateDocs(_In_reads_(numFiles) const PCTSTR* pFiles, UINT numFiles, INT openDoc);
 
 	void FileNameChanged(LPTSTR newPath)
 	{
 		if (_openDoc == -1)
 			return;
 
-		_tcscpy(_hexProp[_openDoc].szFileName, newPath);
+		_tcscpy_s(_hexProp[_openDoc].szFileName, newPath);
 	};
 
 	void SetParentNppHandle(HWND hWnd, UINT cont)
@@ -337,10 +337,10 @@ protected :
 
 private:
 	void UpdateHeader(BOOL isFirstTime = FALSE);
-	void ReadArrayToList(LPSTR text,INT iItem, INT iSubItem);
-	void AddressConvert(LPSTR text, INT length);
-	void DumpConvert(LPSTR text, UINT length);
-	void BinHexConvert(LPSTR text, INT length);
+	void ReadArrayToList(_Out_writes_z_( bufferSize ) LPSTR text, rsize_t bufferSize, INT iItem, INT iSubItem);
+	void AddressConvert(_In_reads_(length) LPSTR text, _In_range_(0, 65) INT length);
+	void DumpConvert(_In_reads_(length) LPSTR text, UINT length);
+	void BinHexConvert(_In_reads_( length ) LPSTR text, _In_range_(0, 65) INT length);
 	void MoveView(void);
 	void SetLineVis(UINT pos, eLineVis mode);
 	void GetLineVis(void);

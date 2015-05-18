@@ -18,8 +18,9 @@
 #include "SysMsg.h"
 #include <memory>
 #include <algorithm>
+#include <tchar.h>
 
-WcharMbcsConvertor * WcharMbcsConvertor::_pSelf = new WcharMbcsConvertor;
+WcharMbcsConvertor* WcharMbcsConvertor::_pSelf = new WcharMbcsConvertor;
 
 void systemMessage(const TCHAR *title)
 {
@@ -49,7 +50,15 @@ void printStr(const TCHAR *str2print)
 
 void writeLog(const TCHAR *logFileName, const TCHAR *log2write)
 {	
-	FILE *f = generic_fopen(logFileName, TEXT("a+"));
+	FILE* f = NULL;
+	errno_t err = _tfopen_s(&f, logFileName, TEXT("a+"));
+	if ( err != 0 ) {
+		if ( IsDebuggerPresent( ) ) {
+			_CrtDbgBreak( );
+			}
+		//TODO: log it somehow!
+		return;
+		}
 	const TCHAR * ptr = log2write;
 	fwrite(log2write, sizeof(log2write[0]), lstrlen(log2write), f);
 	fputc('\n', f);
@@ -70,40 +79,40 @@ int getCpFromStringValue(const TCHAR * encodingStr)
 	if (!encodingStr)
 		return CP_ACP;
 
-	if (generic_stricmp(TEXT("windows-1250"), encodingStr) == 0)
+	if (_tcsicmp(TEXT("windows-1250"), encodingStr) == 0)
 		return 1250;
-	if (generic_stricmp(TEXT("windows-1251"), encodingStr) == 0)
+	if (_tcsicmp(TEXT("windows-1251"), encodingStr) == 0)
 		return 1251;
-	if (generic_stricmp(TEXT("windows-1252"), encodingStr) == 0)
+	if (_tcsicmp(TEXT("windows-1252"), encodingStr) == 0)
 		return 1252;
-	if (generic_stricmp(TEXT("windows-1253"), encodingStr) == 0)
+	if (_tcsicmp(TEXT("windows-1253"), encodingStr) == 0)
 		return 1253;
-	if (generic_stricmp(TEXT("windows-1254"), encodingStr) == 0)
+	if (_tcsicmp(TEXT("windows-1254"), encodingStr) == 0)
 		return 1254;
-	if (generic_stricmp(TEXT("windows-1255"), encodingStr) == 0)
+	if (_tcsicmp(TEXT("windows-1255"), encodingStr) == 0)
 		return 1255;
-	if (generic_stricmp(TEXT("windows-1256"), encodingStr) == 0)
+	if (_tcsicmp(TEXT("windows-1256"), encodingStr) == 0)
 		return 1256;
-	if (generic_stricmp(TEXT("windows-1257"), encodingStr) == 0)
+	if (_tcsicmp(TEXT("windows-1257"), encodingStr) == 0)
 		return 1257;
-	if (generic_stricmp(TEXT("windows-1258"), encodingStr) == 0)
+	if (_tcsicmp(TEXT("windows-1258"), encodingStr) == 0)
 		return 1258;
 
-	if (generic_stricmp(TEXT("big5"), encodingStr) == 0)
+	if (_tcsicmp(TEXT("big5"), encodingStr) == 0)
 		return 950;
-	if (generic_stricmp(TEXT("gb2312"), encodingStr) == 0)
+	if (_tcsicmp(TEXT("gb2312"), encodingStr) == 0)
 		return 936;
-	if (generic_stricmp(TEXT("shift_jis"), encodingStr) == 0)
+	if (_tcsicmp(TEXT("shift_jis"), encodingStr) == 0)
 		return 936;
-	if (generic_stricmp(TEXT("euc-kr"), encodingStr) == 0)
+	if (_tcsicmp(TEXT("euc-kr"), encodingStr) == 0)
 		return 936;
-	if (generic_stricmp(TEXT("tis-620"), encodingStr) == 0)
+	if (_tcsicmp(TEXT("tis-620"), encodingStr) == 0)
 		return 874;
 
-	if (generic_stricmp(TEXT("iso-8859-8"), encodingStr) == 0)
+	if (_tcsicmp(TEXT("iso-8859-8"), encodingStr) == 0)
 		return 28598;
 
-	if (generic_stricmp(TEXT("utf-8"), encodingStr) == 0)
+	if (_tcsicmp(TEXT("utf-8"), encodingStr) == 0)
 		return 65001;
 
 	return CP_ACP;
