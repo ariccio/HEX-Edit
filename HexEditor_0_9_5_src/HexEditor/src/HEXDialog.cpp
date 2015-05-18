@@ -1999,7 +1999,7 @@ void HexEdit::TrackMenu(POINT pt)
 	::AppendMenu(hSubMenu, MF_STRING | ((_pCurProp->bits == HEX_LONG)?MF_CHECKED:0), 10, _T("64-Bit"));
 	::AppendMenu(hSubMenu, MF_SEPARATOR, 0, _T("-----------------"));
 	/* set binary decoding */
-	if (NLGetText(_hInst, _hParent, _pCurProp->isBin == TRUE ? _T("to Hex"):_T("to Binary"), txtMenu, sizeof(txtMenu)) == FALSE)
+	if (NLGetText(_hInst, _hParent, _pCurProp->isBin == TRUE ? _T("to Hex"):_T("to Binary"), txtMenu, (sizeof(txtMenu)/sizeof(txtMenu[0]))) == FALSE)
 		_tcscpy_s(txtMenu, _pCurProp->isBin == TRUE ? _T("to Hex"):_T("to Binary"));
 	::AppendMenu(hSubMenu, MF_STRING, 11, txtMenu);
 	/* change between big- and little-endian */

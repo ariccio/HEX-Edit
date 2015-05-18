@@ -363,7 +363,7 @@ void loadSettings(void)
 	/* Test if config path exist, if not create */
 	if (::PathFileExists(configPath) == FALSE)
 	{
-		vector<string>  vPaths;
+		std::vector<string>  vPaths;
 
 		*_tcsrchr(configPath, '\\') = NULL;
 		do {
@@ -371,7 +371,8 @@ void loadSettings(void)
 			*_tcsrchr(configPath, NULL) = NULL;
 		} while (::PathFileExists(configPath) == FALSE);
 
-		for (size_t i = vPaths.size()-1; i >= 0; i--)
+		const size_t vPathsSize = vPaths.size( );
+		for (size_t i = 0; i < vPathsSize; ++i)
 		{
 			_tcscpy_s(configPath, vPaths[i].c_str());
 			::CreateDirectory(configPath, NULL);

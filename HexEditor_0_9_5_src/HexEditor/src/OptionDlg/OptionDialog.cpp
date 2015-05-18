@@ -85,7 +85,7 @@ BOOL CALLBACK OptionDlg::run_dlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPA
 
 			for (UINT i = 0; i < PROP_MAX; i++)
 			{
-				if (NLGetText(_hInst, _hParent, szTabNames[i], text, sizeof(text)) == FALSE)
+				if (NLGetText(_hInst, _hParent, szTabNames[i], text, (sizeof(text)/sizeof(text[0]))) == FALSE)
 					_tcscpy_s(text, szTabNames[i]);
 				item.pszText	= text;
 				item.cchTextMax	= (int)_tcslen(text);

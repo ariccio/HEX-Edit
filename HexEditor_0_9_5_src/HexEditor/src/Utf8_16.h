@@ -58,7 +58,7 @@ public:
 	utf8 get() const { return m_nCur; };
 	void operator++();
 	eState getState() { return m_eState; };
-	operator bool() { return m_pRead <= m_pEnd; };
+	operator bool() const { return m_pRead <= m_pEnd; };
 
 protected:
 	void toStart(); // Put to start state, swap bytes if necessary
