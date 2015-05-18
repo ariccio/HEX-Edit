@@ -1488,16 +1488,11 @@ void HexEdit::Paste(void)
 					UpdateBookmarks(posBeg, posEnd - posBeg);
 				}
 			}
+			delete[] buffer;
+			buffer = nullptr;
 
-			/* remove resources */
-			if (buffer != NULL) {
-				delete[] buffer;
-				buffer = nullptr;
-			}
-			if (target != NULL) {
-				delete[] target;
-				target = nullptr;
-			}
+			delete[] target;
+			target = nullptr;
 		}
 		else
 		{
