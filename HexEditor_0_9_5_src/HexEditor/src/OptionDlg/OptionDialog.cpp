@@ -414,11 +414,11 @@ BOOL OptionDlg::GetParams(void)
 			_pProp->hexProp.isBin    = TRUE;
 
 		/* get autostart properties */
-		::GetWindowText(::GetDlgItem(_hSelf, IDC_EDIT_EXTLIST), _pProp->autoProp.szExtensions, sizeof(_pProp->autoProp.szExtensions));
-		::GetWindowText(::GetDlgItem(_hSelf, IDC_EDIT_PERCENT), _pProp->autoProp.szPercent, sizeof(_pProp->autoProp.szPercent));
+		::GetWindowText(::GetDlgItem(_hSelf, IDC_EDIT_EXTLIST), _pProp->autoProp.szExtensions, (sizeof(_pProp->autoProp.szExtensions)/sizeof(_pProp->autoProp.szExtensions[0])));
+		::GetWindowText(::GetDlgItem(_hSelf, IDC_EDIT_PERCENT), _pProp->autoProp.szPercent, (sizeof(_pProp->autoProp.szPercent)/sizeof(_pProp->autoProp.szPercent[0])));
 
 		/* get font information */
-		::GetWindowText(::GetDlgItem(_hSelf, IDC_COMBO_FONTNAME), _pProp->fontProp.szFontName, sizeof(_pProp->fontProp.szFontName));
+		::GetWindowText(::GetDlgItem(_hSelf, IDC_COMBO_FONTNAME), _pProp->fontProp.szFontName, (sizeof(_pProp->fontProp.szFontName)/sizeof(_pProp->fontProp.szFontName[0])));
 		_pProp->fontProp.iFontSizeElem	= (UINT)::SendDlgItemMessage(_hSelf, IDC_COMBO_FONTSIZE, CB_GETCURSEL, 0, 0);
 		_pProp->fontProp.isBold			= (::SendDlgItemMessage(_hSelf, IDC_CHECK_BOLD, BM_GETCHECK, 0, 0) == BST_CHECKED);
 		_pProp->fontProp.isItalic		= (::SendDlgItemMessage(_hSelf, IDC_CHECK_ITALIC, BM_GETCHECK, 0, 0) == BST_CHECKED);
