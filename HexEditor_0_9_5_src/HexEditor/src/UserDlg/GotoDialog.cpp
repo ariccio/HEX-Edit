@@ -228,7 +228,7 @@ void GotoDlg::calcAddress(void)
 			{
 				newPos = ASCIIConvert(temp);
 				newPos /= (prop.columns * prop.bits);
-				sprintf(text, "%d", newPos + 1);
+				sprintf(text, "%u", newPos + 1);
 				::SetWindowTextA(_hLineEdit, text);
 			}
 		}
