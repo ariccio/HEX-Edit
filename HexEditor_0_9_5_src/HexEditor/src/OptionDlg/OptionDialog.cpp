@@ -122,7 +122,7 @@ BOOL CALLBACK OptionDlg::run_dlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPA
 
 			/* init font size combos */
 			for (size_t i = 0 ; i < G_FONTSIZE_MAX; i++) {
-				_stprintf(text, _T("%d"), g_iFontSize[i]);
+				_stprintf(text, _T("%u"), g_iFontSize[i]);
 				::SendDlgItemMessage(_hSelf, IDC_COMBO_FONTSIZE, CB_ADDSTRING, 0, (LPARAM)text);
 			}
 
