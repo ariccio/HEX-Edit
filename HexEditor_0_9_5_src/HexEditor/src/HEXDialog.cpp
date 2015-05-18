@@ -4198,7 +4198,7 @@ void HexEdit::SetStatusBar(void)
 		::SendMessage(_hParent, NPPM_SETSTATUSBAR, STATUSBAR_DOC_SIZE, (LPARAM)buffer);
 
 		/* set doc length */
-		_stprintf(buffer, _T("Ln : %d    Col : %d    Sel : %d"), 
+		_stprintf(buffer, _T("Ln : %u    Col : %u    Sel : %u"), 
 			_pCurProp->cursorItem + 1, 
 			(GetCurrentPos() % VIEW_ROW) + 1,
 			(GetCurrentPos() > GetAnchor() ? GetCurrentPos()-GetAnchor() : GetAnchor()-GetCurrentPos()));
