@@ -92,10 +92,11 @@ public:
 protected:
 	WcharMbcsConvertor() : _multiByteStr(NULL), _wideCharStr(NULL), _multiByteAllocLen(0), _wideCharAllocLen(0), initSize(1024) {};
 	~WcharMbcsConvertor() {
-		if (_multiByteStr)
-			delete [] _multiByteStr;
-		if (_wideCharStr)
-			delete [] _wideCharStr;
+		delete[] _multiByteStr;
+		_multiByteStr = nullptr;
+		
+		delete[] _wideCharStr;
+		_wideCharStr = nullptr;
 	};
 	static WcharMbcsConvertor * _pSelf;
 

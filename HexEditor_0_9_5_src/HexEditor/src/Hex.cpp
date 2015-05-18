@@ -171,6 +171,7 @@ BOOL APIENTRY DllMain( HANDLE hModule,
 			hexEdit2.destroy();
 			propDlg.destroy();
 			delete funcItem[0]._pShKey;
+			funcItem[0]._pShKey = nullptr;
 
             ClearMenuStructures();
 
@@ -1047,27 +1048,27 @@ void SystemUpdate(void)
 		openDoc2 = newOpenDoc2;
 
 		INT			i = 0;
-		INT			docCnt1;
-		INT			docCnt2;
-		LPCTSTR		*fileNames1;
-		LPCTSTR		*fileNames2;
+		//INT			docCnt1;
+		//INT			docCnt2;
+		//LPCTSTR		*fileNames1;
+		//LPCTSTR		*fileNames2;
 		BOOL		isAllocOk = TRUE;
 		
 		/* update doc information */
-		docCnt1		= (INT)::SendMessage(nppData._nppHandle, NPPM_GETNBOPENFILES, 0, (LPARAM)PRIMARY_VIEW);
-		docCnt2		= (INT)::SendMessage(nppData._nppHandle, NPPM_GETNBOPENFILES, 0, (LPARAM)SECOND_VIEW);
-		fileNames1	= (LPCTSTR*)new LPTSTR[docCnt1];
-		fileNames2	= (LPCTSTR*)new LPTSTR[docCnt2];
+		INT docCnt1		= (INT)::SendMessage(nppData._nppHandle, NPPM_GETNBOPENFILES, 0, (LPARAM)PRIMARY_VIEW);
+		INT docCnt2		= (INT)::SendMessage(nppData._nppHandle, NPPM_GETNBOPENFILES, 0, (LPARAM)SECOND_VIEW);
+		PTSTR* fileNames1	= new PTSTR[docCnt1];
+		PTSTR* fileNames2	= new PTSTR[docCnt2];
 
 		if ((fileNames1 != NULL) && (fileNames2 != NULL))
 		{
 			for (i = 0; (i < docCnt1) && (isAllocOk == TRUE); i++) {
-				fileNames1[i] = (LPTSTR)new TCHAR[MAX_PATH];
+				fileNames1[i] = new TCHAR[MAX_PATH];
 				if (fileNames1[i] == NULL)
 					isAllocOk = FALSE;
 			}
 			for (i = 0; (i < docCnt2) && (isAllocOk == TRUE); i++) {
-				fileNames2[i] = (LPTSTR)new TCHAR[MAX_PATH];
+				fileNames2[i] = new TCHAR[MAX_PATH];
 				if (fileNames2[i] == NULL)
 					isAllocOk = FALSE;
 			}
@@ -1092,17 +1093,21 @@ void SystemUpdate(void)
 
 			if (fileNames1 != NULL)
 			{
-				for (i = 0; i < docCnt1; i++)
-					if (fileNames1[i] != NULL)
-						delete [] fileNames1[i];
-				delete [] fileNames1;
+				for (i = 0; i < docCnt1; i++) {
+					delete[] fileNames1[i];
+					fileNames1[i] = nullptr;
+				}
+				delete[] fileNames1;
+				fileNames1 = nullptr;
 			}
 			if (fileNames2 != NULL)
 			{
-				for (i = 0; i < docCnt2; i++)
-					if (fileNames2[i] != NULL)
-						delete [] fileNames2[i];
-				delete [] fileNames2;
+				for (i = 0; i < docCnt2; i++) {
+					delete[] fileNames2[i];
+					fileNames2[i] = nullptr;
+				}
+				delete[] fileNames2;
+				fileNames2 = nullptr;
 			}
 		}
 	}
@@ -1162,7 +1167,7 @@ BOOL IsExtensionRegistered(LPCTSTR file)
 {
 	BOOL	bRet	= FALSE;
 
-	LPTSTR	TEMP	= (LPTSTR) new TCHAR[MAX_PATH];
+	LPTSTR	TEMP	= new TCHAR[MAX_PATH];
 	LPTSTR	ptr		= NULL;
 
 	if (TEMP != NULL)
@@ -1180,7 +1185,8 @@ BOOL IsExtensionRegistered(LPCTSTR file)
 			ptr = _tcstok(NULL, _T(" "));
 		}
 
-		delete [] TEMP;
+		delete[] TEMP;
+		TEMP = nullptr;
 	}
 
 	return bRet;
@@ -1206,7 +1212,7 @@ BOOL IsPercentReached(LPCTSTR file)
 
 	/* create buffer and read from file */
 	DWORD	dwBytesRead	= 0;
-	LPBYTE	pReadBuffer	= (LPBYTE)new BYTE[AUTOSTART_MAX];
+	LPBYTE	pReadBuffer	= new BYTE[AUTOSTART_MAX];
 
 	if (pReadBuffer != NULL)
 	{
@@ -1234,7 +1240,8 @@ BOOL IsPercentReached(LPCTSTR file)
 				}
 			}
 		}
-		delete [] pReadBuffer;
+		delete[] pReadBuffer;
+		pReadBuffer = nullptr;
 	}
 	::CloseHandle(hFile);
 
@@ -1247,7 +1254,7 @@ void ChangeClipboardDataToHex(tClipboard *clipboard)
 	INT		length	= clipboard->length;
 
 	clipboard->length	= length * 3;
-	clipboard->text		= (char*) new char[clipboard->length+1];
+	clipboard->text		= new char[clipboard->length+1];
 
 	if (clipboard->text != NULL)
 	{
@@ -1292,7 +1299,7 @@ BOOL LittleEndianChange(HWND hTarget, HWND hSource, LPINT offset, LPINT length)
 	if (*length <= FIND_BLOCK)
 	{
 		/* create a buffer to copy data */
-		buffer = (LPSTR)new CHAR[(posEnd - posBeg) + 1];
+		buffer = new CHAR[(posEnd - posBeg) + 1];
 
 		if (buffer != NULL)
 		{
@@ -1306,7 +1313,7 @@ BOOL LittleEndianChange(HWND hTarget, HWND hSource, LPINT offset, LPINT length)
 			/* convert when property is little */
 			if (hexProp.isLittle == TRUE)
 			{
-				LPSTR temp  = (LPSTR)new CHAR[lenCpy + 1];
+				LPSTR temp  = new CHAR[lenCpy + 1];
 				LPSTR pText	= buffer;
 
 				/* it must be unsigned */
@@ -1314,14 +1321,14 @@ BOOL LittleEndianChange(HWND hTarget, HWND hSource, LPINT offset, LPINT length)
 					temp[i] = buffer[i];
 				}
 
-				UINT offset = (lenCpy) % hexProp.bits;
+				const UINT innerOffset = (lenCpy) % hexProp.bits;
 				UINT max	= (lenCpy) / hexProp.bits + 1;
 
 				for (UINT i = 1; i <= max; i++)
 				{
 					if (i == max)
 					{
-						for (UINT j = 1; j <= offset; j++)
+						for (UINT j = 1; j <= innerOffset; j++)
 						{
 							*pText = temp[lenCpy-j];
 							pText++;
@@ -1337,7 +1344,8 @@ BOOL LittleEndianChange(HWND hTarget, HWND hSource, LPINT offset, LPINT length)
 					}
 				}
 				*pText = NULL;
-				delete [] temp;
+				delete[] temp;
+				temp = nullptr;
 			}
 
 			/* add text to target */
@@ -1349,7 +1357,8 @@ BOOL LittleEndianChange(HWND hTarget, HWND hSource, LPINT offset, LPINT length)
 			*length = posEnd - posBeg;
 			bRet = TRUE;
 		}
-		delete [] buffer;
+		delete[] buffer;
+		buffer = nullptr;
 	}
 	return bRet;
 }
@@ -1375,7 +1384,7 @@ eError replaceLittleToBig(HWND hTarget, HWND hSource, INT startSrc, INT startTgt
 		}
 	}
 
-	char*	text = (char*)new char[lengthNew+1];
+	char*	text = new char[lengthNew+1];
 
 	if (text != NULL)
 	{
@@ -1438,7 +1447,8 @@ eError replaceLittleToBig(HWND hTarget, HWND hSource, INT startSrc, INT startTgt
 
 			ScintillaMsg(hTarget, SCI_ENDUNDOACTION);
 		}
-		delete [] text;
+		delete[] text;
+		text = nullptr;
 
 		return E_OK;
 	}
@@ -1483,8 +1493,8 @@ void DoCompare(void)
 		
 	if (cmpResult.hFile != INVALID_HANDLE_VALUE)
 	{
-		LPSTR	buffer1 = (LPSTR)new CHAR[COMP_BLOCK+1];
-		LPSTR	buffer2 = (LPSTR)new CHAR[COMP_BLOCK+1];
+		LPSTR	buffer1 = new CHAR[COMP_BLOCK+1];
+		LPSTR	buffer2 = new CHAR[COMP_BLOCK+1];
 
 		/* get text size to comapre */
 		INT		maxLength1 = ScintillaMsg(nppData._scintillaMainHandle, SCI_GETTEXTLENGTH) + 1;
@@ -1554,8 +1564,8 @@ void DoCompare(void)
             }
 
             /* create two structures for each view */
-			tCmpResult* pCmpResult1 = (tCmpResult*)new tCmpResult;
-			tCmpResult* pCmpResult2 = (tCmpResult*)new tCmpResult;
+			tCmpResult* pCmpResult1 = new tCmpResult;
+			tCmpResult* pCmpResult2 = new tCmpResult;
 
             if ((pCmpResult1 != NULL) && (pCmpResult2 != NULL))
             {
@@ -1569,12 +1579,16 @@ void DoCompare(void)
             else
             {
 		        delete pCmpResult1;
+				pCmpResult1 = nullptr;
 		        delete pCmpResult2;
+				pCmpResult2 = nullptr;
             }
 		}
 
-		delete [] buffer1;
+		delete[] buffer1;
+		buffer1 = nullptr;
 		delete [] buffer2;
+		buffer2 = nullptr;
 	}
 }
 

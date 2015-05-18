@@ -149,7 +149,8 @@ const wchar_t * WcharMbcsConvertor::char2wchar(const char * mbcs2Convert, UINT c
 	{
 		if (len > int(_wideCharAllocLen))
 		{
-			delete [] _wideCharStr;
+			delete[] _wideCharStr;
+			_wideCharStr = nullptr;
 			_wideCharAllocLen = len;
 			_wideCharStr = new wchar_t[_wideCharAllocLen];
 		}
@@ -174,7 +175,8 @@ const char * WcharMbcsConvertor::wchar2char(const wchar_t * wcharStr2Convert, UI
 	{
 		if (len > int(_multiByteAllocLen))
 		{
-			delete [] _multiByteStr;
+			delete[] _multiByteStr;
+			_multiByteStr = nullptr;
 			_multiByteAllocLen = len;
 			_multiByteStr = new char[_multiByteAllocLen];
 		}

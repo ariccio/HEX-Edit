@@ -68,7 +68,7 @@ public:
 
    	void doDialog(BOOL toggle = FALSE);
 
-	void UpdateDocs(LPCTSTR* pFiles, UINT numFiles, INT openDoc);
+	void UpdateDocs(const PCTSTR* pFiles, UINT numFiles, INT openDoc);
 
 	void FileNameChanged(LPTSTR newPath)
 	{

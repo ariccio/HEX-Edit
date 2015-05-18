@@ -785,7 +785,7 @@ LRESULT HexEdit::runProcList(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPar
 }
 
 
-void HexEdit::UpdateDocs(LPCTSTR* pFiles, UINT numFiles, INT openDoc)
+void HexEdit::UpdateDocs(const PCTSTR* pFiles, UINT numFiles, INT openDoc)
 {
 	/* update current visible line */
 	GetLineVis();
@@ -1111,7 +1111,7 @@ void HexEdit::Copy(void)
 				offset = posBeg;
 				length = CalcStride(posBeg, posEnd);
 				clipboard.length = length;
-				clipboard.text = (char*)new char[length+1];
+				clipboard.text = new char[length+1];
 				if (clipboard.text != NULL) {
 					if (LittleEndianChange(hSciTgt, _hParentHandle, &offset, &length) == TRUE) {
 						::SendMessage(hSciTgt, SCI_SETSEL, posBeg - offset, (LPARAM)posBeg - offset + clipboard.length);
@@ -1134,7 +1134,7 @@ void HexEdit::Copy(void)
 					offset = posBeg;
 					length = CalcStride(posBeg, posEnd);
 					clipboard.length = length;
-					clipboard.text = (char*)new char[length+1];
+					clipboard.text = new char[length+1];
 					if (clipboard.text != NULL) {
 						if (LittleEndianChange(hSciTgt, _hParentHandle, &offset, &length) == TRUE) {
 							::SendMessage(hSciTgt, SCI_SETSEL, posBeg - offset, (LPARAM)posBeg - offset + clipboard.length);
@@ -1168,7 +1168,7 @@ void HexEdit::Copy(void)
 
 				/* get text */
 				clipboard.length = clipboard.stride * (last-first+1);
-				clipboard.text = (char*)new char[clipboard.length+1];
+				clipboard.text = new char[clipboard.length+1];
 
 				if (clipboard.text != NULL) {
 					posEnd = posBeg + clipboard.stride;
@@ -1200,7 +1200,8 @@ void HexEdit::Copy(void)
 				ChangeClipboardDataToHex(&data);
 				/* store selected text in scintilla clipboard */
 				SciSubClassWrp::execute(SCI_COPYTEXT, data.length+1, (LPARAM)data.text);
-				delete [] data.text;
+				delete[] data.text;
+				data.text = nullptr;
 			}
 			else
 			{
@@ -1209,7 +1210,8 @@ void HexEdit::Copy(void)
 			}
 
 			/* delete old text and store to clipboard */
-			delete [] g_clipboard.text;
+			delete[] g_clipboard.text;
+			g_clipboard.text = nullptr;
 		}
 
 		/* destory scintilla handle */
@@ -1278,7 +1280,7 @@ void HexEdit::Cut(void)
 
 					/* get text */
 					clipboard.length = clipboard.stride * (last-first+1);
-					clipboard.text = (LPSTR)new CHAR[clipboard.length+1];
+					clipboard.text = new CHAR[clipboard.length+1];
 
 					if (clipboard.text != NULL)
 					{
@@ -1327,7 +1329,7 @@ void HexEdit::Cut(void)
 				/* get length and initialize clipboard */
 				length = CalcStride(posBeg, posEnd);
 				clipboard.length = length;
-				clipboard.text = (LPSTR)new CHAR[length+1];
+				clipboard.text = new CHAR[length+1];
 				if (clipboard.text != NULL)
 				{
 					if (LittleEndianChange(hSciTgt, _hParentHandle, &offset, &length) == TRUE)
@@ -1368,7 +1370,8 @@ void HexEdit::Cut(void)
 				ChangeClipboardDataToHex(&data);
 				/* store selected text in scintilla clipboard */
 				SciSubClassWrp::execute(SCI_COPYTEXT, data.length+1, (LPARAM)data.text);
-				delete [] data.text;
+				delete[] data.text;
+				data.text = nullptr;
 			}
 			else
 			{
@@ -1377,7 +1380,8 @@ void HexEdit::Cut(void)
 			}
 
 			/* delete old text and store to clipboard */
-			delete [] g_clipboard.text;
+			delete[] g_clipboard.text;
+			g_clipboard.text = nullptr;
 			g_clipboard = clipboard;
 		}
 
@@ -1591,7 +1595,8 @@ void HexEdit::Paste(void)
 				SciSubClassWrp::execute(SCI_TARGETFROMSELECTION);
 				SciSubClassWrp::execute(SCI_REPLACETARGET, lenData, (LPARAM)pchData);
 				UpdateBookmarks(posBeg, (posEnd - posBeg) - lenData);
-				delete [] pchData;
+				delete[] pchData;
+				pchData = nullptr;
 			}
 
 			GlobalUnlock(hClipboardData);
@@ -3976,7 +3981,7 @@ void HexEdit::CutBookmarkLines(void)
 	clipboard.items	 = (UINT)_pCurProp->vBookmarks.size();
 	clipboard.stride = VIEW_ROW;
 	clipboard.length = clipboard.items * VIEW_ROW;
-	clipboard.text = (LPSTR)new CHAR[clipboard.length+1];
+	clipboard.text = new CHAR[clipboard.length+1];
 	if (clipboard.text != NULL)
 	{
 		/* cut and replace line with "" */
@@ -4012,7 +4017,8 @@ void HexEdit::CutBookmarkLines(void)
 			ChangeClipboardDataToHex(&data);
 			/* store selected text in scintilla clipboard */
 			SciSubClassWrp::execute(SCI_COPYTEXT, data.length+1, (LPARAM)data.text);
-			delete [] data.text;
+			delete[] data.text;
+			data.text = nullptr;
 		}
 		else
 		{
@@ -4021,7 +4027,8 @@ void HexEdit::CutBookmarkLines(void)
 		}
 
 		/* delete old text and store to clipboard */
-		delete [] g_clipboard.text;
+		delete[] g_clipboard.text;
+		g_clipboard.text = nullptr;
 		g_clipboard = clipboard;
 	}
 	SciSubClassWrp::execute(SCI_ENDUNDOACTION);
@@ -4051,7 +4058,7 @@ void HexEdit::CopyBookmarkLines(void)
 	clipboard.items	 = (UINT)_pCurProp->vBookmarks.size();
 	clipboard.stride = VIEW_ROW;
 	clipboard.length = clipboard.items * VIEW_ROW;
-	clipboard.text = (LPSTR)new CHAR[clipboard.length+1];
+	clipboard.text = new CHAR[clipboard.length+1];
 	if (clipboard.text != NULL)
 	{
 		/* cut and replace line with "" */
@@ -4084,7 +4091,8 @@ void HexEdit::CopyBookmarkLines(void)
 			ChangeClipboardDataToHex(&data);
 			/* store selected text in scintilla clipboard */
 			SciSubClassWrp::execute(SCI_COPYTEXT, data.length+1, (LPARAM)data.text);
-			delete [] data.text;
+			delete[] data.text;
+			data.text = nullptr;
 		}
 		else
 		{
@@ -4093,7 +4101,8 @@ void HexEdit::CopyBookmarkLines(void)
 		}
 
 		/* delete old text and store to clipboard */
-		delete [] g_clipboard.text;
+		delete[] g_clipboard.text;
+		g_clipboard.text = nullptr;
 		g_clipboard = clipboard;
 	}
 }

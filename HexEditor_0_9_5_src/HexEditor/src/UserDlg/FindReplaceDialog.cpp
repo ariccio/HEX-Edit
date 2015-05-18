@@ -504,7 +504,7 @@ void FindReplaceDlg::onReplace(void)
 	lenStr = length;
 	if (LittleEndianChange(_hSCI, hSciSrc, &offset, &length) == TRUE)
 	{
-		LPSTR	text	= (LPSTR)new CHAR[lenStr+1];
+		LPSTR	text	= new CHAR[lenStr+1];
 
 		if (text != NULL)
 		{
@@ -534,7 +534,8 @@ void FindReplaceDlg::onReplace(void)
     			LITTLE_REPLACE_ERROR;
     		}
 
-    		delete [] text;
+    		delete[] text;
+			text = nullptr;
 		}
    		CleanScintillaBuf(_hSCI);
 	}
@@ -778,7 +779,7 @@ void FindReplaceDlg::getSelText(tComboInfo* info)
 
 	if (info->length != 0)
 	{
-		CHAR	*text	= (CHAR*)new CHAR[info->length+1];
+		CHAR	*text	= new CHAR[info->length+1];
 		if (text != NULL)
 		{
 			/* convert and select and get the text */
@@ -794,7 +795,8 @@ void FindReplaceDlg::getSelText(tComboInfo* info)
 
 				CleanScintillaBuf(_hSCI);
 			}
-			delete [] text;
+			delete[] text;
+			text = nullptr;
 		}
 	}
 }

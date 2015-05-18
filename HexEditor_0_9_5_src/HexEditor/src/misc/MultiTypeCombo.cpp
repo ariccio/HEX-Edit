@@ -318,8 +318,8 @@ void MultiTypeCombo::decode(tComboInfo* info, eCodingType type)
 		{
 			INT	length = (INT)strlen(info->text);
 
-			LPSTR temp	= (LPSTR)new CHAR[length+1];
-			LPSTR corr	= (LPSTR)new CHAR[length+1];
+			LPSTR temp	= new CHAR[length+1];
+			LPSTR corr	= new CHAR[length+1];
 			LPSTR ptr   = NULL;
 
 			if ((temp != NULL) && (corr != NULL))
@@ -358,12 +358,11 @@ void MultiTypeCombo::decode(tComboInfo* info, eCodingType type)
 				info->text[info->length] = 0;
 			}
 
-			if (corr != NULL) {
-				delete [] corr;
-			}
-			if (temp != NULL) {
-				delete [] temp;
-			}
+			delete[] corr;
+			corr = nullptr;
+
+			delete[] temp;
+			temp = nullptr;
 			break;
 		}
 		default:
@@ -437,7 +436,7 @@ void MultiTypeCombo::encode(tEncComboInfo* info, eCodingType type)
 		{
 			if (info->length != 0)
 			{
-				LPSTR temp	= (LPSTR)new CHAR[info->length+1];
+				LPSTR temp	= new CHAR[info->length+1];
 				if (temp != NULL)
 				{
 					memcpy(temp, info->text, info->length);
@@ -449,7 +448,8 @@ void MultiTypeCombo::encode(tEncComboInfo* info, eCodingType type)
 						strcat(info->text, hexMask[(UCHAR)temp[i]]);
 					}
 					info->length = (info->length * 3) - 1;
-					delete [] temp;
+					delete[] temp;
+					temp = nullptr;
 				}
 			}
 			break;

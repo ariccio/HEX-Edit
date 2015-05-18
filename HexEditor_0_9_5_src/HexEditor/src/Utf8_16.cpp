@@ -148,8 +148,7 @@ size_t Utf8_16_Read::convert(char* buf, size_t len)
             
             if (m_nBufSize != newSize)
             {
-				if (m_pNewBuf)
-					delete [] m_pNewBuf;
+				delete [] m_pNewBuf;
                 m_pNewBuf  = NULL;
                 m_pNewBuf  = new ubyte[newSize];
                 m_nBufSize = newSize;
@@ -271,8 +270,7 @@ size_t Utf8_16_Write::fwrite(const void* p, size_t _size)
             if (_size > m_nBufSize)
             {
                 m_nBufSize = _size;
-				if (m_pBuf != NULL)
-					delete [] m_pBuf;
+				delete [] m_pBuf;
                 m_pBuf = NULL;
                 m_pBuf = new utf16[_size + 1];
             }
@@ -300,11 +298,8 @@ size_t Utf8_16_Write::fwrite(const void* p, size_t _size)
 
 size_t Utf8_16_Write::convert(char* p, size_t _size)
 {
-	if (m_pNewBuf)
-    {
-		delete[] m_pNewBuf;
-		m_pNewBuf = nullptr;
-	}
+	delete[] m_pNewBuf;
+	m_pNewBuf = nullptr;
 
     switch (m_eEncoding)
     {
@@ -370,8 +365,8 @@ void Utf8_16_Write::setEncoding(Utf8_16::encodingType eType)
 
 void Utf8_16_Write::fclose()
 {
-	if (m_pNewBuf)
-		delete [] m_pNewBuf;
+	delete[] m_pNewBuf;
+	m_pNewBuf = nullptr;
 
 	if (m_pFile)
 		::fclose(m_pFile);
