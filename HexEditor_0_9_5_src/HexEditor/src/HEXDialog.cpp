@@ -25,6 +25,7 @@
 #include <windows.h>
 #include <commctrl.h>
 #include <cassert>
+#include <memory>
 
 
 extern char	hexMask[256][3];
@@ -1748,7 +1749,7 @@ void HexEdit::ZoomRestore(void)
 	GetLineVis();
 }
 
-
+_Pre_satisfies_(_pCurProp != NULL)
 void HexEdit::ReadArrayToList(_Out_writes_z_( bufferSize ) LPSTR text, const rsize_t bufferSize, INT iItem, INT iSubItem)
 {
 	if (_pCurProp == NULL)
@@ -1773,6 +1774,7 @@ void HexEdit::ReadArrayToList(_Out_writes_z_( bufferSize ) LPSTR text, const rsi
 				case 14: sprintf_s(text, bufferSize, "%014X", iItem * VIEW_ROW); break;
 				case 15: sprintf_s(text, bufferSize, "%015X", iItem * VIEW_ROW); break;
 				case 16: sprintf_s(text, bufferSize, "%016X", iItem * VIEW_ROW); break;
+				default: assert( false ); text[ 0 ] = 0;
 			}
 		} else {
 			switch (_pCurProp->addWidth)
@@ -1790,6 +1792,7 @@ void HexEdit::ReadArrayToList(_Out_writes_z_( bufferSize ) LPSTR text, const rsi
 				case 14: sprintf_s(text, bufferSize, "%014x", iItem * VIEW_ROW); break;
 				case 15: sprintf_s(text, bufferSize, "%015x", iItem * VIEW_ROW); break;
 				case 16: sprintf_s(text, bufferSize, "%016x", iItem * VIEW_ROW); break;
+				default: assert( false ); text[ 0 ] = 0;
 			}
 		}
 	}
@@ -3096,11 +3099,34 @@ BOOL HexEdit::OnKeyDownDump(WPARAM wParam, LPARAM lParam)
 BOOL HexEdit::OnCharDump(WPARAM wParam, LPARAM lParam)
 {
 #ifdef UNICODE
-	WCHAR	wText = (WCHAR)wParam;
-	::WideCharToMultiByte(CP_ACP, 0, (LPTSTR)&wText, -1, (LPSTR)&wParam, 1, NULL, NULL);
+	//According to documentation:
+	//The lpMultiByteStr and lpWideCharStr pointers must not be the same.
+	//If they are the same, the function fails, and GetLastError returns ERROR_INVALID_PARAMETER.
+	//WCHAR	wText = (WCHAR)wParam;
+	//::WideCharToMultiByte(CP_ACP, 0, (LPTSTR)&wText, -1, (LPSTR)&wParam, 1, NULL, NULL);
+	const rsize_t bufSize = 32u;
+	char mbText[ bufSize ] = { 0 };
+
+	const wchar_t wText[ 2 ] = { static_cast<wchar_t>( wParam ), 0 };
+
+
+	const int result = ::WideCharToMultiByte(CP_ACP, 0, wText, 2, mbText, static_cast<int>(bufSize), NULL, NULL);
+	if ( result == 0 ) {
+		//ERROR_NO_UNICODE_TRANSLATION is the only sensible error
+		const DWORD lastErr = ::GetLastError( );
+		assert( lastErr != ERROR_INSUFFICIENT_BUFFER );
+		assert( lastErr != ERROR_INVALID_FLAGS );
+		assert( lastErr != ERROR_INVALID_PARAMETER );
+
+		return FALSE;
+		}
+
+	const char keyPressed[ 2 ] = { mbText[ 0 ], 0 };
+#else
+	const char keyPressed[ 2 ] = { static_cast<char>( wParam ), 0 };
 #endif
 
-	switch (wParam)
+	switch (keyPressed[ 0 ])
 	{
 		case 0x08:		/* Back     */
 		case 0x09:		/* TAB		*/
@@ -3132,14 +3158,14 @@ BOOL HexEdit::OnCharDump(WPARAM wParam, LPARAM lParam)
 				/* update text */
 				SciSubClassWrp::execute(SCI_SETTARGETSTART, posBeg);
 				SciSubClassWrp::execute(SCI_SETTARGETEND, posBeg + 1);
-				SciSubClassWrp::execute(SCI_REPLACETARGET, 1, (LPARAM)&wParam);
+				SciSubClassWrp::execute(SCI_REPLACETARGET, 1, (LPARAM)keyPressed);
 				SciSubClassWrp::execute(SCI_SETSEL, posBeg+1, posBeg+1);
 			} else {
 				/* add char */
 				if (_pCurProp->isLittle == TRUE) {
 					SciSubClassWrp::execute(SCI_SETCURRENTPOS, _currLength - (_currLength%_pCurProp->bits));
 				}
-				SciSubClassWrp::execute(SCI_ADDTEXT, 1, (LPARAM)&wParam);
+				SciSubClassWrp::execute(SCI_ADDTEXT, 1, (LPARAM)keyPressed);
 			}
 
 			_onChar = TRUE;

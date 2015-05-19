@@ -73,6 +73,7 @@ BOOL CALLBACK PatternDlg::run_dlgProc(HWND hwnd, UINT Message, WPARAM wParam, LP
 {
 	switch (Message) 
 	{
+		//Originally returned false unconditionally!
 		case WM_INITDIALOG:
 		{
 			_pCombo = new MultiTypeCombo;
@@ -80,7 +81,10 @@ BOOL CALLBACK PatternDlg::run_dlgProc(HWND hwnd, UINT Message, WPARAM wParam, LP
 			_pCombo->setCodingType(HEX_CODE_HEX);
 
 			 /* change language */
-			NLChangeDialog(_hInst, _nppData._nppHandle, _hSelf, _T("Pattern"));
+			const BOOL res = NLChangeDialog(_hInst, _nppData._nppHandle, _hSelf, _T("Pattern"));
+			if ( !res ) {
+				return FALSE;
+				}
 			::SetWindowText(_hSelf, _txtCaption);
 			break;
 		}

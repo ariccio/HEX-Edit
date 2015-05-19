@@ -48,6 +48,7 @@ BOOL CALLBACK GotoDlg::run_dlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARA
 {
 	switch (Message) 
 	{
+		//Originally returned FALSE uncondtionally!
 		case WM_INITDIALOG:
 		{
 			/* initialize hex view */
@@ -63,9 +64,7 @@ BOOL CALLBACK GotoDlg::run_dlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARA
 			::SendDlgItemMessage(_hSelf, IDC_RADIO_ADDRESS, BM_SETCHECK, BST_CHECKED, 0);
 
 			/* change language */
-			NLChangeDialog(_hInst, _nppData._nppHandle, _hSelf, _T("Goto"));
-
-			break;
+			return NLChangeDialog(_hInst, _nppData._nppHandle, _hSelf, _T("Goto"));
 		}
 		case WM_ACTIVATE :
         {
@@ -245,7 +244,7 @@ void GotoDlg::calcAddress(void)
 void GotoDlg::UpdateDialog(void)
 {
 	tHexProp	prop;
-	CHAR		text[17];
+	CHAR		text[ 17 ] = { 0 };
 
 	::SendMessage(_hParentHandle, HEXM_GETSETTINGS, 0, (LPARAM)&prop);
 

@@ -36,10 +36,11 @@ UINT ColumnDlg::doDialogAddWidth(UINT width)
 
 BOOL CALLBACK ColumnDlg::run_dlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
-	TCHAR	text[16];
+	TCHAR	text[ 16 ] = { 0 };
 
 	switch (Message) 
 	{
+		//Originally returned FALSE for all cases!
 		case WM_INITDIALOG:
 		{
 			goToCenter();
@@ -47,14 +48,13 @@ BOOL CALLBACK ColumnDlg::run_dlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPA
 			if (_isColumn == TRUE) {
 				_itot_s(_column, text, 10);
 				::SetWindowText(::GetDlgItem(_hSelf, IDC_COLUMN_EDIT), text);
-				NLChangeDialog(_hInst, _nppData._nppHandle, _hSelf, _T("ColumnCount"));
-			} else {
-				_itot_s(_width, text, 10);
-				::SetWindowText(::GetDlgItem(_hSelf, IDC_COLUMN_EDIT), text);
-				::SetWindowText(_hSelf, _T("Address Width"));
-				NLChangeDialog(_hInst, _nppData._nppHandle, _hSelf, _T("AddressWidth"));
+				return NLChangeDialog(_hInst, _nppData._nppHandle, _hSelf, _T("ColumnCount"));
 			}
-			break;
+			_itot_s(_width, text, 10);
+			::SetWindowText(::GetDlgItem(_hSelf, IDC_COLUMN_EDIT), text);
+			::SetWindowText(_hSelf, _T("Address Width"));
+			return NLChangeDialog(_hInst, _nppData._nppHandle, _hSelf, _T("AddressWidth"));
+
 		}
 		case WM_COMMAND : 
 		{

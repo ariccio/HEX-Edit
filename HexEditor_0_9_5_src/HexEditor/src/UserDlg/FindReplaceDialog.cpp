@@ -77,6 +77,7 @@ BOOL CALLBACK FindReplaceDlg::run_dlgProc(HWND hwnd, UINT Message, WPARAM wParam
 			goToCenter();
 			return TRUE;
 		}
+		//Originally returned FALSE unconditionally!
 		case WM_ACTIVATE :
         {
 			UINT	posBeg;
@@ -86,9 +87,7 @@ BOOL CALLBACK FindReplaceDlg::run_dlgProc(HWND hwnd, UINT Message, WPARAM wParam
 			::EnableWindow(::GetDlgItem(_hSelf, IDC_CHECK_IN_SEL), ((posBeg == posEnd)?FALSE:TRUE));
 
 			/* change language */
-			NLChangeDialog(_hInst, _nppData._nppHandle, _hSelf, _T("FindReplace"));
-
-            break;
+			return NLChangeDialog(_hInst, _nppData._nppHandle, _hSelf, _T("FindReplace"));
         }
 		case WM_COMMAND : 
 		{
@@ -636,8 +635,8 @@ void FindReplaceDlg::processAll(UINT process)
 		} while (loopEnd == FALSE);
 	}
 
-	TCHAR	TEMP[128];
-	TCHAR	text[128];
+	TCHAR	TEMP[ 128 ] = { 0 };
+	TCHAR	text[ 128 ] = { 0 };
 
 	/* display result */
 	if (cnt == 0)

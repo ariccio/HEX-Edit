@@ -76,20 +76,26 @@ typedef struct tNatLangInfo {
  *
  * @note		'&' sign for key selection supported, e.g. "&Cancel process"
  */
-static void NLChangeDialog(HINSTANCE hInst, HWND hNpp, HWND hWnd, LPCTSTR pszSection)
+static BOOL NLChangeDialog(HINSTANCE hInst, HWND hNpp, HWND hWnd, LPCTSTR pszSection)
 {
-	TCHAR		szPath[MAX_PATH] = { 0 };
-	::GetModuleFileName((HMODULE)hInst, szPath, MAX_PATH);
+	const DWORD bufferSize = MAX_PATH;
+	TCHAR		szPath[bufferSize] = { 0 };
+	const DWORD res = ::GetModuleFileName(hInst, szPath, bufferSize);
+	if ( res == 0 ) {
+		return FALSE;
+		}
+	if ( res >= bufferSize ) {
+		return FALSE;
+		}
 
 	tNatLangInfo		nli;
 	nli.hCtrl			= hWnd;
 	nli.pszCtrl			= pszSection;
-
 	CommunicationInfo	ci;
-	ci.srcModuleName	= PathFindFileName(szPath);
 	ci.internalMsg		= NPP_NATLANG_CHANGEDLG;
 	ci.info				= &nli;
-	::SendMessage(hNpp, NPPM_MSGTOPLUGIN, (WPARAM)NATIVE_LANG_NAME, (LPARAM)&ci);
+	ci.srcModuleName	= PathFindFileName(szPath);
+	return ::SendMessage(hNpp, NPPM_MSGTOPLUGIN, (WPARAM)NATIVE_LANG_NAME, (LPARAM)&ci);
 }
 
 /**
@@ -114,8 +120,15 @@ static void NLChangeDialog(HINSTANCE hInst, HWND hNpp, HWND hWnd, LPCTSTR pszSec
  */
 static void NLChangeNppMenu(HINSTANCE hInst, HWND hNpp, LPCTSTR pszPluginName, FuncItem* funcItem, UINT nbFunc)
 {
-	TCHAR		szPath[MAX_PATH] = { 0 };
-	::GetModuleFileName((HMODULE)hInst, szPath, MAX_PATH);
+	const DWORD bufferSize = MAX_PATH;
+	TCHAR		szPath[bufferSize] = { 0 };
+	const DWORD res = ::GetModuleFileName(hInst, szPath, bufferSize);
+	if ( res == 0 ) {
+		return;
+		}
+	if ( res >= bufferSize ) {
+		return;
+		}
 
 	tNatLangInfo		nli;
 	nli.hCtrl			= NULL;
@@ -151,8 +164,15 @@ static void NLChangeNppMenu(HINSTANCE hInst, HWND hNpp, LPCTSTR pszPluginName, F
  */
 static BOOL NLChangeMenu(HINSTANCE hInst, HWND hNpp, HMENU hMenu, LPCTSTR pszMenu, UINT mf_ByComPos)
 {
-	TCHAR		szPath[MAX_PATH] = { 0 };
-	::GetModuleFileName((HMODULE)hInst, szPath, MAX_PATH);
+	const DWORD bufferSize = MAX_PATH;
+	TCHAR		szPath[bufferSize] = { 0 };
+	const DWORD res = ::GetModuleFileName(hInst, szPath, bufferSize);
+	if ( res == 0 ) {
+		return FALSE;
+		}
+	if ( res >= bufferSize ) {
+		return FALSE;
+		}
 
 	tNatLangInfo		nli;
 	nli.hCtrl			= hMenu;
@@ -187,8 +207,15 @@ static BOOL NLChangeMenu(HINSTANCE hInst, HWND hNpp, HMENU hMenu, LPCTSTR pszMen
  */
 static void NLChangeHeader(HINSTANCE hInst, HWND hNpp, HWND hHeader, LPCTSTR pszSection)
 {
-	TCHAR		szPath[MAX_PATH] = { 0 };
-	::GetModuleFileName((HMODULE)hInst, szPath, MAX_PATH);
+	const DWORD bufferSize = MAX_PATH;
+	TCHAR		szPath[bufferSize] = { 0 };
+	const DWORD res = ::GetModuleFileName(hInst, szPath, bufferSize);
+	if ( res == 0 ) {
+		return;
+		}
+	if ( res >= bufferSize ) {
+		return;
+		}
 
 	tNatLangInfo		nli;
 	nli.hCtrl			= hHeader;
@@ -220,8 +247,15 @@ static void NLChangeHeader(HINSTANCE hInst, HWND hNpp, HWND hHeader, LPCTSTR psz
  */
 static void NLChangeCombo(HINSTANCE hInst, HWND hNpp, HWND hCombo, LPCTSTR pszSection, UINT count)
 {
-	TCHAR		szPath[MAX_PATH] = { 0 };
-	::GetModuleFileName((HMODULE)hInst, szPath, MAX_PATH);
+	const DWORD bufferSize = MAX_PATH;
+	TCHAR		szPath[bufferSize] = { 0 };
+	const DWORD res = ::GetModuleFileName(hInst, szPath, bufferSize);
+	if ( res == 0 ) {
+		return;
+		}
+	if ( res >= bufferSize ) {
+		return;
+		}
 
 	tNatLangInfo		nli;
 	nli.hCtrl			= hCombo;
@@ -254,10 +288,19 @@ static void NLChangeCombo(HINSTANCE hInst, HWND hNpp, HWND hCombo, LPCTSTR pszSe
  *
  * @note		Format tags are supported. Use % instead of \, e.g. %t %s %d %n
  */
-static UINT NLGetText(HINSTANCE hInst, HWND hNpp, LPCTSTR pszKey, _Out_writes_z_( length ) LPTSTR pszText, UINT length)
+_Success_( return > 0 )
+static UINT NLGetText(HINSTANCE hInst, HWND hNpp, LPCTSTR pszKey, _Out_writes_z_( length ) LPTSTR pszText, _In_range_( 1, UINT_MAX ) UINT length)
 {
-	TCHAR		szPath[MAX_PATH] = { 0 };
-	::GetModuleFileName(hInst, szPath, MAX_PATH);
+	pszText[ 0 ] = 0;
+	const DWORD bufferSize = MAX_PATH;
+	TCHAR		szPath[bufferSize] = { 0 };
+	const DWORD res = ::GetModuleFileName(hInst, szPath, bufferSize);
+	if ( res == 0 ) {
+		return 0;
+		}
+	if ( res >= bufferSize ) {
+		return 0;
+		}
 
 	tNatLangInfo		nli;
 	nli.hCtrl			= NULL;
@@ -271,7 +314,6 @@ static UINT NLGetText(HINSTANCE hInst, HWND hNpp, LPCTSTR pszKey, _Out_writes_z_
 	ci.internalMsg		= NPP_NATLANG_GETTEXT;
 	ci.info				= &nli;
 	::SendMessage(hNpp, NPPM_MSGTOPLUGIN, (WPARAM)NATIVE_LANG_NAME, (LPARAM)&ci);
-
 	return (UINT)nli.lRes;
 }
 
@@ -293,16 +335,17 @@ static UINT NLGetText(HINSTANCE hInst, HWND hNpp, LPCTSTR pszKey, _Out_writes_z_
  *				key_name="text%tcaption%t"\n
  *				...\n
  */
+_Success_( return != FALSE )
 static INT NLMessageBox(HINSTANCE hInst, HWND hNpp, LPCTSTR pszKey, UINT uType, HWND hDlg = NULL)
 {
 	if (hDlg == NULL)
 		hDlg = hNpp;
 
-	LPTSTR	wPtr = NULL;
+	//LPTSTR	wPtr = NULL;
 	TCHAR	text[MAX_PATH]	= {0};
 	if (NLGetText(hInst, hNpp, pszKey, text, MAX_PATH)) {
 		TCHAR* nextToken = NULL;
-		wPtr = _tcstok_s(text, _T("\t"), &nextToken);
+		PCTSTR wPtr = _tcstok_s(text, _T("\t"), &nextToken);
 		wPtr = _tcstok_s(NULL, _T("\t"), &nextToken);
 		return ::MessageBox(hDlg, text, wPtr, uType);
 	}

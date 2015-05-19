@@ -30,6 +30,7 @@ BOOL CALLBACK CompareDlg::run_dlgProc(HWND hwnd, UINT Message, WPARAM wParam, LP
 {
 	switch (Message) 
 	{
+		//Originally returned false unconditionally!
 		case WM_INITDIALOG:
 		{
 			goToCenter();
@@ -81,8 +82,7 @@ BOOL CALLBACK CompareDlg::run_dlgProc(HWND hwnd, UINT Message, WPARAM wParam, LP
 			}
 
 			/* change language */
-			NLChangeDialog(_hInst, _nppData._nppHandle, _hSelf, _T("CompDialog"));
-			break;
+			return NLChangeDialog(_hInst, _nppData._nppHandle, _hSelf, _T("CompDialog"));
 		}
 		case WM_COMMAND : 
 		{

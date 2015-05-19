@@ -337,7 +337,11 @@ protected :
 
 private:
 	void UpdateHeader(BOOL isFirstTime = FALSE);
-	void ReadArrayToList(_Out_writes_z_( bufferSize ) LPSTR text, rsize_t bufferSize, INT iItem, INT iSubItem);
+	
+	_Pre_satisfies_(_pCurProp != NULL)
+	void ReadArrayToList(_Out_writes_z_( bufferSize ) LPSTR text, const rsize_t bufferSize, INT iItem, INT iSubItem);
+	
+	
 	void AddressConvert(_In_reads_(length) LPSTR text, _In_range_(0, 65) INT length);
 	void DumpConvert(_In_reads_(length) LPSTR text, UINT length);
 	void BinHexConvert(_In_reads_( length ) LPSTR text, _In_range_(0, 65) INT length);

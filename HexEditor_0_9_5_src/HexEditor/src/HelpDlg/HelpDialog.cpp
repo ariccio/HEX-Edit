@@ -32,6 +32,7 @@ BOOL CALLBACK HelpDlg::run_dlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARA
 {
 	switch (Message) 
 	{
+		//Originally returned TRUE unconditionally!
         case WM_INITDIALOG :
 		{
             _emailLink.init(_hInst, _hSelf);
@@ -41,9 +42,7 @@ BOOL CALLBACK HelpDlg::run_dlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARA
             _urlNppPlugins.create(::GetDlgItem(_hSelf, IDC_NPP_PLUGINS_URL), _T("http://sourceforge.net/projects/npp-plugins/"));
 
 			/* change language */
-			NLChangeDialog(_hInst, _nppData._nppHandle, _hSelf, _T("Help"));
-
-			return TRUE;
+			return NLChangeDialog(_hInst, _nppData._nppHandle, _hSelf, _T("Help"));
 		}
 		case WM_COMMAND : 
 		{

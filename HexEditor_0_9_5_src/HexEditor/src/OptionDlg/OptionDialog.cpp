@@ -69,6 +69,7 @@ BOOL CALLBACK OptionDlg::run_dlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPA
 {
 	switch (Message) 
 	{
+		//Originally returned FALSE unconditionally!
 		case WM_INITDIALOG:
 		{
 			TCITEM		item;
@@ -129,9 +130,7 @@ BOOL CALLBACK OptionDlg::run_dlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPA
 			SetParams();
 
 			/* change language */
-			NLChangeDialog(_hInst, _nppData._nppHandle, _hSelf, _T("Options"));
-
-			break;
+			return NLChangeDialog(_hInst, _nppData._nppHandle, _hSelf, _T("Options"));
 		}
 		case WM_COMMAND : 
 		{
@@ -272,7 +271,7 @@ void OptionDlg::TabUpdate(void)
 
 void OptionDlg::SetParams(void)
 {
-	TCHAR		text[16];
+	TCHAR		text[ 16 ] = { 0 };
 
 	/* set default format */
 	_itot_s(_pProp->hexProp.columns, text, 10);

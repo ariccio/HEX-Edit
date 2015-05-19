@@ -95,9 +95,7 @@ BOOL CALLBACK ColorPopup::run_dlgProc(UINT message, WPARAM wParam, LPARAM lParam
 				::SendDlgItemMessage(_hSelf, IDC_COLOR_LIST, LB_SETITEMDATA , nColor, (LPARAM) colorItems[nColor]);
 			}
 
-			NLChangeDialog(_hInst, _hNpp, _hSelf, _T("ColorPopup"));
-
-			return TRUE;
+			return NLChangeDialog(_hInst, _hNpp, _hSelf, _T("ColorPopup"));
 		}
 		
 		case WM_CTLCOLORLISTBOX:
