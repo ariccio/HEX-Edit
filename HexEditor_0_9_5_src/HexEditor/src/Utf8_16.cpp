@@ -53,12 +53,12 @@ void Utf8_16_Read::forceEncoding(Utf8_16::encodingType eType)
 	m_eEncoding = eType;
 }
 
-int Utf8_16_Read::isUTF8_16()
+int Utf8_16_Read::isUTF8_16() const
 {
 	int rv=1;
 	int ASCII7only=1;
-	utf8 *sx	= (utf8 *)m_pBuf;
-	utf8 *endx	= sx + m_nLen;
+	const utf8 *sx = reinterpret_cast<const utf8 *>(m_pBuf);
+	const utf8 *endx	= sx + m_nLen;
 
 	while (sx<endx)
 	{
@@ -108,14 +108,16 @@ int Utf8_16_Read::isUTF8_16()
 	return(ASCII7only?0:rv);
 }
 
-size_t Utf8_16_Read::convert(char* buf, size_t len)
+
+_At_( m_pNewBuf, _Post_readable_size_( return ) )
+size_t Utf8_16_Read::convert(_In_reads_(len) char* const buf, size_t len)
 {
 	// bugfix by Jens Lorenz
 	static	size_t nSkip = 0;
 
     size_t  ret = 0;
     
-	m_pBuf = (ubyte*)buf;
+	m_pBuf = reinterpret_cast<ubyte*>(buf);
 	m_nLen = len;
 
 	if ((m_bFirstRead == true) && m_bIsBOM)
@@ -157,7 +159,7 @@ size_t Utf8_16_Read::convert(char* buf, size_t len)
             ubyte* pCur = m_pNewBuf;
             
             m_Iter16.set(m_pBuf + nSkip, len - nSkip, m_eEncoding);
-
+			assert( m_Iter16 );
             for (; m_Iter16; ++m_Iter16)
             {
                 *pCur++ = m_Iter16.get();
@@ -228,7 +230,8 @@ FILE * Utf8_16_Write::fopen(_In_z_ const char *_name, _In_z_ const char *_type)
 	return m_pFile;
 }
 
-size_t Utf8_16_Write::fwrite(const void* p, size_t _size)
+_Pre_satisfies_(m_pFile != NULL)
+size_t Utf8_16_Write::fwrite(_In_reads_(_size) const void* p, size_t _size)
 {
     // no file open
 	if (!m_pFile)
@@ -236,7 +239,7 @@ size_t Utf8_16_Write::fwrite(const void* p, size_t _size)
 		return 0;
 	}
 
-    size_t  ret = 0;
+    //size_t  ret = 0;
     
 	if (m_bFirstWrite && m_bIsBOM)
     {
@@ -263,8 +266,7 @@ size_t Utf8_16_Write::fwrite(const void* p, size_t _size)
         case eUtf8Plain:
         case eUtf8: {
             // Normal write
-            ret = ::fwrite(p, _size, 1, m_pFile);
-            break;
+            return ::fwrite(p, _size, 1, m_pFile);
         }
         case eUtf16BigEndian:
         case eUtf16LittleEndian: {
@@ -286,18 +288,17 @@ size_t Utf8_16_Write::fwrite(const void* p, size_t _size)
                     *pCur++ = iter8.get();
                 }
             }
-            ret = ::fwrite(m_pBuf, (const char*)pCur - (const char*)m_pBuf, 1, m_pFile);
-            break;
+            return ::fwrite(m_pBuf, (const char*)pCur - (const char*)m_pBuf, 1, m_pFile);
         }    
         default:
-            break;
+            return 0;
     }
     
-    return ret;
+    return 0;
 }
 
 
-size_t Utf8_16_Write::convert(char* p, size_t _size)
+size_t Utf8_16_Write::convert(_In_reads_z_( _size ) const char* p, const size_t _size)
 {
 	delete[] m_pNewBuf;
 	m_pNewBuf = nullptr;
@@ -315,7 +316,11 @@ size_t Utf8_16_Write::convert(char* p, size_t _size)
         case eUtf8: {
 			if (m_bIsBOM)
 			{
-				m_nBufSize = _size + 3;
+				m_nBufSize = _size + 4;
+				assert( m_nBufSize >= 3 );
+				if ( m_nBufSize < 3 ) {
+					m_nBufSize += 1;
+					}
 				m_pNewBuf = new ubyte[m_nBufSize];
 				memcpy(m_pNewBuf, k_Boms[m_eEncoding], 3);
 				memcpy(&m_pNewBuf[3], p, _size);
@@ -341,7 +346,7 @@ size_t Utf8_16_Write::convert(char* p, size_t _size)
             Utf8_Iter iter8;
             iter8.set(reinterpret_cast<const ubyte*>(p), _size, m_eEncoding);
             
-            utf16* pCur = (utf16*)&m_pNewBuf[m_bIsBOM?2:0];
+            utf16* pCur = reinterpret_cast<utf16*>(&m_pNewBuf[m_bIsBOM?2:0]);
             
             for (; iter8; ++iter8) {
                 if (iter8.canGet()) {
@@ -363,7 +368,6 @@ void Utf8_16_Write::setEncoding(Utf8_16::encodingType eType)
 	m_eEncoding = eType;
 }
 
-
 void Utf8_16_Write::fclose()
 {
 	delete[] m_pNewBuf;
@@ -384,17 +388,19 @@ void Utf8_Iter::reset()
 {
 	m_pBuf = NULL;
 	m_pRead = NULL;
-	m_pEnd = NULL;
+	//m_pEnd = NULL;
+	m_nLen = 0;
 	m_eState = eStart;
 	m_nCur = 0;
 	m_eEncoding = eUnknown;
 }
 
-void Utf8_Iter::set(const ubyte* pBuf, size_t nLen, encodingType eEncoding)
+void Utf8_Iter::set(_Pre_readable_size_( nLen ) const ubyte* pBuf, size_t nLen, encodingType eEncoding)
 {
 	m_pBuf      = pBuf;
 	m_pRead     = pBuf;
-	m_pEnd      = pBuf + nLen;
+	m_nLen = nLen;
+	//m_pEnd      = pBuf + nLen;
 	m_eEncoding = eEncoding;
 	operator++();
 	// Note: m_eState, m_nCur not set
@@ -441,8 +447,8 @@ void Utf8_Iter::toStart()
 
 void Utf8_Iter::swap()
 {
-	utf8* p = reinterpret_cast<utf8*>(&m_nCur);
-	utf8 swapbyte = *p;
+	utf8* const p = reinterpret_cast<utf8*>(&m_nCur);
+	const utf8 swapbyte = *p;
 	*p = *(p + 1);
 	*(p + 1) = swapbyte;
 }
@@ -457,18 +463,20 @@ void Utf16_Iter::reset()
 {
 	m_pBuf = NULL;
 	m_pRead = NULL;
-	m_pEnd = NULL;
+	//m_pEnd = NULL;
+	m_nLen = 0;
 	m_eState = eStart;
 	m_nCur = 0;
 	m_nCur16 = 0;
 	m_eEncoding = eUnknown;
 }
 
-void Utf16_Iter::set(const ubyte* pBuf, size_t nLen, encodingType eEncoding)
+void Utf16_Iter::set(_Pre_readable_size_( nLen ) const ubyte* pBuf, size_t nLen, encodingType eEncoding)
 {
 	m_pBuf = pBuf;
 	m_pRead = pBuf;
-	m_pEnd = pBuf + nLen;
+	//m_pEnd = pBuf + nLen;
+	m_nLen = nLen;
 	m_eEncoding = eEncoding;
 	m_eState = eStart;
 	operator++();

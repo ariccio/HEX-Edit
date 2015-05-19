@@ -54,11 +54,11 @@ public:
 
 	Utf16_Iter();
 	void reset();
-	void set(const ubyte* pBuf, size_t nLen, encodingType eEncoding);
+	void set(_Pre_readable_size_( nLen ) const ubyte* pBuf, size_t nLen, encodingType eEncoding);
 	utf8 get() const { return m_nCur; };
 	void operator++();
-	eState getState() { return m_eState; };
-	operator bool() const { return m_pRead <= m_pEnd; };
+	eState getState() const { return m_eState; };
+	operator bool() const { return m_pRead <= (m_pBuf + m_nLen); };
 
 protected:
 	void toStart(); // Put to start state, swap bytes if necessary
@@ -68,9 +68,10 @@ protected:
 	eState m_eState;
 	utf8 m_nCur;
 	utf16 m_nCur16;
-	const ubyte* m_pBuf;
+	_Field_size_bytes_(m_nLen) const ubyte* m_pBuf;
 	const ubyte* m_pRead;
-	const ubyte* m_pEnd;
+	//const ubyte* m_pEnd;
+	rsize_t m_nLen;
 };
 
 // Reads UTF-8 and outputs UTF-16
@@ -78,7 +79,7 @@ class Utf8_Iter : public Utf8_16 {
 public:
 	Utf8_Iter();
 	void reset();
-	void set(const ubyte* pBuf, size_t nLen, encodingType eEncoding);
+	void set(_Pre_readable_size_( nLen ) const ubyte* pBuf, size_t nLen, encodingType eEncoding);
 	utf16 get() const {
 #ifdef _DEBUG
 		assert(m_eState == eStart);
@@ -87,7 +88,7 @@ public:
 	}
 	bool canGet() const { return m_eState == eStart; }
 	void operator++();
-	operator bool() { return m_pRead <= m_pEnd; }
+	operator bool() const { return m_pRead <= (m_pBuf + m_nLen); }
 
 protected:
 	void swap();
@@ -102,9 +103,10 @@ protected:
 	encodingType m_eEncoding;
 	eState m_eState;
 	utf16 m_nCur;
-	const ubyte* m_pBuf;
+	_Field_size_bytes_(m_nLen) const ubyte* m_pBuf;
 	const ubyte* m_pRead;
-	const ubyte* m_pEnd;
+	//const ubyte* m_pEnd;
+	rsize_t m_nLen;
 };
 
 // Reads UTF16 and outputs UTF8
@@ -113,17 +115,19 @@ public:
 	Utf8_16_Read();
 	~Utf8_16_Read();
 
-	size_t convert(char* buf, size_t len);
-	char* getNewBuf() { return reinterpret_cast<char*>(m_pNewBuf); }
+	_At_( m_pNewBuf, _Post_readable_size_( return ) )
+	size_t convert(_In_reads_(len) char* const buf, size_t len);
+
+	const char* getNewBuf() const { return reinterpret_cast<const char*>(m_pNewBuf); }
 
 	void forceEncoding(encodingType eType);
 	void noBOM(void) { m_bIsBOM = false; };
 
 	encodingType getEncoding() const { return m_eEncoding; }
-	size_t calcCurPos(size_t pos);
+	//size_t calcCurPos(size_t pos);
 protected:
 	void determineEncoding();
-	int isUTF8_16();
+	int isUTF8_16() const;
 private:
 	encodingType    m_eEncoding;
 	ubyte*          m_pBuf;
@@ -145,19 +149,22 @@ public:
 	void setEncoding(encodingType eType);
 	void disableBOM(void) { m_bIsBOM = false; };
 
-	FILE * fopen(_In_z_ const char *_name, _In_z_ const char *_type);
-	size_t fwrite(const void* p, size_t _size);
+	FILE* fopen(_In_z_ const char *_name, _In_z_ const char *_type);
+	
+	_Pre_satisfies_(m_pFile != NULL)
+	size_t fwrite(_In_reads_(_size) const void* p, size_t _size);
+	
 	void   fclose();
 
-	size_t convert(char* p, size_t _size);
-	char* getNewBuf() { return reinterpret_cast<char*>(m_pNewBuf); }
-	size_t calcCurPos(size_t pos);
+	size_t convert(_In_reads_z_( _size ) const char* p, const size_t _size);
+	const char* getNewBuf() const { return reinterpret_cast<const char*>(m_pNewBuf); }
+	//size_t calcCurPos(size_t pos);
 
 protected:
 	encodingType	m_eEncoding;
 	FILE*			m_pFile;
 	utf16*			m_pBuf;
-	ubyte*			m_pNewBuf;
+	_Field_size_( m_nBufSize ) ubyte*			m_pNewBuf;
 	size_t			m_nBufSize;
 	bool			m_bFirstWrite;
 	bool			m_bIsBOM;

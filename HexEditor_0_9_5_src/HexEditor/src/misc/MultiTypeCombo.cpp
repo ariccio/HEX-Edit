@@ -430,7 +430,7 @@ void MultiTypeCombo::encode(tEncComboInfo* info, eCodingType type)
 				codePage = CP_UTF8;
 			}
 
-			::MultiByteToWideChar(codePage, 0, buffer, -1, (WCHAR*)info->text, COMBO_STR_MAX);
+			::MultiByteToWideChar(codePage, 0, buffer, -1, (WCHAR*)info->text, COMBO_STR_MAX/2);
 			break;
 		}
 		case HEX_CODE_HEX:

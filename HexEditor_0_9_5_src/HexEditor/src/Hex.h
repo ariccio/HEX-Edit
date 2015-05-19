@@ -131,7 +131,7 @@ typedef struct tCmpResult
 	HANDLE				hFile;					// file handle to compare results
 	INT					offCmpCache;			// display cache offset
 	INT					lenCmpCache;			// display cache length
-	CHAR				cmpCache[CACHE_SIZE];	// display cache
+	_Field_size_part_( CACHE_SIZE, lenCmpCache ) CHAR				cmpCache[CACHE_SIZE];	// display cache
 } tCmpResult;
 
 typedef struct tHexProp

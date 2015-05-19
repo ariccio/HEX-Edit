@@ -24,6 +24,7 @@
 
 #include <windows.h>
 #include <commctrl.h>
+#include <cassert>
 
 
 extern char	hexMask[256][3];
@@ -1911,6 +1912,7 @@ void HexEdit::DumpConvert(_In_reads_(length) LPSTR text, UINT length)
 		{
 			if (i == max)
 			{
+				assert( offset <= length );
 				for (UINT j = 1; j <= offset; j++)
 				{
 					*pText = temp[length-j];
@@ -3185,8 +3187,8 @@ void HexEdit::DrawDumpText(HDC hDc, DWORD item, INT subItem)
 		if (pos < CACHE_SIZE)
 		{
 			for (INT i = 0; i < _pCurProp->columns; i++, pos++) {
-				if ((_pCurProp->pCmpResult->cmpCache[pos] == TRUE) &&
-                    (pos < _pCurProp->pCmpResult->lenCmpCache)){
+				if ((pos < _pCurProp->pCmpResult->lenCmpCache) &&
+					(_pCurProp->pCmpResult->cmpCache[pos] == TRUE)){
 					DrawPartOfDumpText(hDc, rc, text, i * _pCurProp->bits, _pCurProp->bits, HEX_COLOR_DIFF);
 				}
 			}
