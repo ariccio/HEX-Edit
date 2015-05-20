@@ -59,7 +59,6 @@ void writeLog(const TCHAR *logFileName, const TCHAR *log2write)
 		//TODO: log it somehow!
 		return;
 		}
-	const TCHAR * ptr = log2write;
 	fwrite(log2write, sizeof(log2write[0]), lstrlen(log2write), f);
 	fputc('\n', f);
 	fflush(f);

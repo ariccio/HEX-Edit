@@ -90,7 +90,7 @@ public :
 
 	void addText(tComboInfo info);
 	void setText(tComboInfo info);
-	void getText(tComboInfo* info);
+	void getText(_Inout_ tComboInfo* info);
 	eCodingType setCodingType(eCodingType code);
 	void setDocCodePage(eNppCoding codepage);
 	void convertBaseCoding(void);
@@ -99,11 +99,11 @@ private:
 	void changeCoding(void);
 	BOOL setComboText(tComboInfo info, UINT message = CB_ADDSTRING);
 	BOOL setComboText(tEncComboInfo info, UINT message = CB_ADDSTRING);
-	void getComboText(char* str);
+	void getComboText(_Pre_writable_size_( COMBO_STR_MAX ) char* str);
 	void selectComboText(tEncComboInfo info);
-	void decode(tComboInfo* info, eCodingType type);
-	void encode(tComboInfo* info, eCodingType type);
-	void encode(tEncComboInfo* info, eCodingType type);
+	void decode(_Inout_ tComboInfo* info, eCodingType type);
+	void encode(_Inout_ tComboInfo* info, eCodingType type);
+	void encode(_Inout_ tEncComboInfo* info, eCodingType type);
 
 private :
 	HWND					_hNpp;

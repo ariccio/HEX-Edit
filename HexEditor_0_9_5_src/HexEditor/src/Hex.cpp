@@ -254,7 +254,6 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
 				{
 					tHexProp	hexProp1	= hexEdit1.GetHexProp();
 					tHexProp	hexProp2	= hexEdit2.GetHexProp();
-					INT			length		= notifyCode->length;
 
 					if ((hexProp1.szFileName != NULL) && (hexProp2.szFileName != NULL) &&
 						(_tcscmp(hexProp1.szFileName, hexProp2.szFileName) == 0))
@@ -630,7 +629,8 @@ void CleanScintillaBuf(HWND hWnd)
  *
  *	API-Wrapper
  */
-UINT ScintillaGetText(char *text, INT start, INT end) 
+_Pre_satisfies_( end >= start )
+UINT ScintillaGetText(_Pre_writable_size_( ( end - start ) + 1 ) _Post_readable_size_( return ) _Post_z_ _Out_ char* text, INT start, INT end) 
 {
 	TextRange tr;
 	tr.chrg.cpMin = start;
@@ -639,7 +639,8 @@ UINT ScintillaGetText(char *text, INT start, INT end)
 	return (UINT)ScintillaMsg(SCI_GETTEXTRANGE, 0, reinterpret_cast<LPARAM>(&tr));
 }
 
-UINT ScintillaGetText(HWND hWnd, char *text, INT start, INT end)
+_Pre_satisfies_( end >= start )
+UINT ScintillaGetText(HWND hWnd, _Pre_writable_size_( ( end - start ) + 1 ) _Post_readable_size_( return ) _Post_z_ _Out_ char *text, INT start, INT end)
 {
 	TextRange tr;
 	tr.chrg.cpMin = start;
@@ -1034,7 +1035,6 @@ void SystemUpdate(void)
 	OutputDebugString(_T("SystemUpdate\n"));
 
 	UINT		oldSC		= currentSC;
-	UINT		newDocCnt	= 0;
 	TCHAR		pszNewPath[MAX_PATH] = { 0 };
 
 	/* update open files */
@@ -1252,7 +1252,7 @@ BOOL IsPercentReached(LPCTSTR file)
 	return bRet;
 }
 
-void ChangeClipboardDataToHex(tClipboard *clipboard)
+void ChangeClipboardDataToHex(_Inout_ tClipboard *clipboard)
 {
 	char*	text	= clipboard->text;
 	INT		length	= clipboard->length;
@@ -1272,7 +1272,8 @@ void ChangeClipboardDataToHex(tClipboard *clipboard)
 	}
 }
 
-BOOL LittleEndianChange(HWND hTarget, HWND hSource, LPINT offset, LPINT length)
+_Success_( return == TRUE )
+BOOL LittleEndianChange(_In_ HWND hTarget, _In_ HWND hSource, _Out_ LPINT offset, _Out_ LPINT length)
 {
 	if ((hTarget == NULL) || (hSource == NULL) || (offset == NULL) || (length == NULL))
 		return FALSE;
@@ -1465,8 +1466,6 @@ void DoCompare(void)
 {
 	TCHAR		szFile[MAX_PATH];
 	BOOL		doMatch		= TRUE;
-	LPSTR		compare1	= NULL;
-	LPSTR		compare2	= NULL;
 	tHexProp	hexProp1	= hexEdit1.GetHexProp();
 	tHexProp	hexProp2	= hexEdit2.GetHexProp();
 	tCmpResult	cmpResult	= {0};
@@ -1626,7 +1625,7 @@ eNppCoding GetNppEncoding(void)
 }
 
 
-void ClientToScreen(HWND hWnd, RECT* rect)
+void ClientToScreen(HWND hWnd, _Inout_ RECT* rect)
 {
 	POINT		pt;
 
@@ -1644,7 +1643,7 @@ void ClientToScreen(HWND hWnd, RECT* rect)
 }
 
 
-void ScreenToClient(HWND hWnd, RECT* rect)
+void ScreenToClient(HWND hWnd, _Inout_ RECT* rect)
 {
 	POINT		pt;
 

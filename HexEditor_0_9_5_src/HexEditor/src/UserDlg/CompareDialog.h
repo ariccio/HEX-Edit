@@ -37,7 +37,7 @@ public:
 		Window::init(hInst, nppData._nppHandle);
 	};
 
-   	UINT doDialog(HexEdit *pHexEdit1, HexEdit *pHexEdit2, UINT currentSC);
+   	UINT doDialog(_In_ HexEdit *pHexEdit1, _In_ HexEdit *pHexEdit2, UINT currentSC);
 
     virtual void destroy() {};
 

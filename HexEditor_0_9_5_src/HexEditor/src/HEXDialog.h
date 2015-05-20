@@ -303,7 +303,7 @@ public:
 		}
 	};
 
-	void SetCompareResult(tCmpResult* pCmpResult, tCmpResult* pCmpRef = NULL)
+	void SetCompareResult(_In_opt_ tCmpResult* pCmpResult, _In_opt_ tCmpResult* pCmpRef = NULL)
 	{
 		if (pCmpResult == NULL) {
 			if (_pCurProp->pCmpResult != NULL) {

@@ -153,7 +153,7 @@ void MultiTypeCombo::setText(tComboInfo info)
 }
 
 
-void MultiTypeCombo::getText(tComboInfo* info)
+void MultiTypeCombo::getText(_Inout_ tComboInfo* info)
 {
 	getComboText(info->text);
 	decode(info, _currDataType);
@@ -237,7 +237,7 @@ BOOL MultiTypeCombo::setComboText(tEncComboInfo info, UINT message)
 }
 
 
-void MultiTypeCombo::getComboText(CHAR* str)
+void MultiTypeCombo::getComboText(_Pre_writable_size_( COMBO_STR_MAX ) CHAR* str)
 {
 	if (_currDataType == HEX_CODE_UNI) {
 		::SendMessageW(_hCombo, WM_GETTEXT, COMBO_STR_MAX, (LPARAM)str);
@@ -262,7 +262,7 @@ void MultiTypeCombo::selectComboText(tEncComboInfo info)
 
 
 /* store into the data base as ASCII, e.g. get text */
-void MultiTypeCombo::decode(tComboInfo* info, eCodingType type)
+void MultiTypeCombo::decode(_Inout_ tComboInfo* info, eCodingType type)
 {
 	switch (type)
 	{
@@ -374,7 +374,7 @@ void MultiTypeCombo::decode(tComboInfo* info, eCodingType type)
 
 
 /* convert it into the user requested type, e.g. UNI (UTF8) */
-void MultiTypeCombo::encode(tComboInfo* info, eCodingType type)
+void MultiTypeCombo::encode(_Inout_ tComboInfo* info, eCodingType type)
 {
 	tEncComboInfo	encInfo;
 	
@@ -384,7 +384,7 @@ void MultiTypeCombo::encode(tComboInfo* info, eCodingType type)
 	*info = encInfo.comboInfo;
 }
 
-void MultiTypeCombo::encode(tEncComboInfo* info, eCodingType type)
+void MultiTypeCombo::encode(_Inout_ tEncComboInfo* info, eCodingType type)
 {
 	switch (type)
 	{

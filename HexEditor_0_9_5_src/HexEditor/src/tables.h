@@ -119,7 +119,7 @@ const char decMask[128] = {
 
 
 _inline
-int ASCIIConvert(char* text)
+int ASCIIConvert(_In_opt_z_ const char* const text)
 {
 	UINT val = 0;
 

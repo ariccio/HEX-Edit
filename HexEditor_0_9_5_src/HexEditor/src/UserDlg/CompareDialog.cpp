@@ -18,7 +18,7 @@
 #include "CompareDialog.h"
 
 
-UINT CompareDlg::doDialog(HexEdit *pHexEdit1, HexEdit *pHexEdit2, UINT currentSC)
+UINT CompareDlg::doDialog(_In_ HexEdit *pHexEdit1, _In_ HexEdit *pHexEdit2, UINT currentSC)
 {
 	_currentSC	= currentSC;
 	_pHexEdit1	= pHexEdit1;

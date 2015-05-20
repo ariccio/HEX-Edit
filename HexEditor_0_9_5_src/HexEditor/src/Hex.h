@@ -106,7 +106,7 @@ typedef enum eSelItem
 typedef struct tComboInfo
 {
 	INT 				length;
-	CHAR				text[COMBO_STR_MAX];
+	_Field_z_ CHAR				text[COMBO_STR_MAX];
 } tComboInfo;
 
 typedef struct tBkMk
@@ -127,16 +127,16 @@ typedef enum eNppCoding
 typedef struct tCmpResult
 {
     struct tCmpResult*  pCmpRef;                // compare reference to other view
-	TCHAR				szFileName[MAX_PATH];	// file name to compare data
+	_Field_z_ TCHAR				szFileName[MAX_PATH];	// file name to compare data
 	HANDLE				hFile;					// file handle to compare results
 	INT					offCmpCache;			// display cache offset
 	INT					lenCmpCache;			// display cache length
-	_Field_size_part_( CACHE_SIZE, lenCmpCache ) CHAR				cmpCache[CACHE_SIZE];	// display cache
+	_Field_z_ _Field_size_part_( CACHE_SIZE, lenCmpCache ) CHAR				cmpCache[CACHE_SIZE];	// display cache
 } tCmpResult;
 
 typedef struct tHexProp
 {	
-	TCHAR				szFileName[MAX_PATH];	// identifier of struct
+	_Field_z_ TCHAR				szFileName[MAX_PATH];	// identifier of struct
 	eNppCoding			codePage;				// in Npp selected code page
 	BOOL				isModified;				// stores the modification state
 	BOOL				isVisible;				// is current file visible
@@ -148,7 +148,7 @@ typedef struct tHexProp
 	BOOL				isLittle;				// shows in little endian
 	eEdit				editType;				// edit in hex or in ascii
 	UINT				firstVisRow;			// last selected scroll position
-	vector<tBkMk>		vBookmarks;				// bookmarks of the view
+	std::vector<tBkMk>		vBookmarks;				// bookmarks of the view
 
 	BOOL				isSel;					// is text selected...
 	eSel				selection;				// selection type
@@ -177,14 +177,14 @@ typedef struct tColor
 
 typedef struct tAutoStart
 {
-	TCHAR				szExtensions[MAX_PATH];	// auto association to enable hex view
-	TCHAR				szPercent[4];			// autostart of Hex-Edit by % of NULL
+	_Field_z_ TCHAR				szExtensions[MAX_PATH];	// auto association to enable hex view
+	_Field_z_ TCHAR				szPercent[4];			// autostart of Hex-Edit by % of NULL
 } tAutoStart;
 
 typedef struct tFont
 {
 	BOOL				isCapital;				// hex view in capital letters
-	TCHAR				szFontName[128];		// font name of view
+	_Field_z_ TCHAR				szFontName[128];		// font name of view
 	UINT				iFontSizeElem;			// font size element (content is not size!!!)
 	BOOL				isBold;					// font is bold
 	BOOL				isItalic;				// font is italic
@@ -203,7 +203,7 @@ typedef struct tProp
 
 typedef struct tClipboard
 {
-	char*		text;
+	_Field_z_ _Field_size_( length ) char*		text;
 	UINT		length;
 	eSel		selection;
 	UINT		stride;
@@ -230,8 +230,8 @@ typedef enum UniMode {
 typedef struct tMenu {
 	UINT			uID;
 	UINT			uFlags;
-	TCHAR			szName[128];
-	vector<tMenu>	vSubMenu;
+	_Field_z_ TCHAR			szName[128];
+	std::vector<tMenu>	vSubMenu;
 } tMenu;
 
 typedef struct tShortCut {
@@ -261,9 +261,15 @@ const UINT g_iFontSize[G_FONTSIZE_MAX] = {8, 9, 10, 11, 12, 14, 16, 18, 20, 22};
 
 
 UINT ScintillaMsg(HWND hWnd, UINT message, WPARAM wParam = 0, LPARAM lParam = 0);
-UINT ScintillaGetText(HWND hWnd, char* text, INT start, INT end);
+
+_Pre_satisfies_( end >= start )
+UINT ScintillaGetText(HWND hWnd, _Pre_writable_size_( ( end - start ) + 1 ) _Post_readable_size_( return ) _Post_z_ _Out_ char* text, INT start, INT end);
+
 UINT ScintillaMsg(UINT message, WPARAM wParam = 0, LPARAM lParam = 0);
-UINT ScintillaGetText(char* text, INT start, INT end);
+
+_Pre_satisfies_( end >= start )
+UINT ScintillaGetText(_Pre_writable_size_( ( end - start ) + 1 ) _Post_readable_size_( return ) _Post_z_ _Out_ char* text, INT start, INT end);
+
 void CleanScintillaBuf(HWND hWnd);
 void UpdateCurrentHScintilla(void);
 HWND getCurrentHScintilla(void);
@@ -306,14 +312,17 @@ void DoCompare(void);
 /* Global Function of HexEdit */
 BOOL IsExtensionRegistered(LPCTSTR file);
 BOOL IsPercentReached(LPCTSTR file);
-void ChangeClipboardDataToHex(tClipboard *clipboard);
-BOOL LittleEndianChange(HWND hTarget, HWND hSource, LPINT offset, LPINT length);
+void ChangeClipboardDataToHex(_Inout_ tClipboard *clipboard);
+
+_Success_( return == TRUE )
+BOOL LittleEndianChange(_In_ HWND hTarget, _In_ HWND hSource, _Out_ LPINT offset, _Out_ LPINT length);
+
 eError replaceLittleToBig(HWND hTarget, HWND hSource, INT startSrc, INT startTgt, INT lengthOld, INT lengthNew);
 
 /* Extended Window Funcions */
 eNppCoding GetNppEncoding(void);
-void ClientToScreen(HWND hWnd, RECT* rect);
-void ScreenToClient(HWND hWnd, RECT* rect);
+void ClientToScreen(HWND hWnd, _Inout_ RECT* rect);
+void ScreenToClient(HWND hWnd, _Inout_ RECT* rect);
 
 
 #endif //HEX_H
