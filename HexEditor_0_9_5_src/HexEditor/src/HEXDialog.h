@@ -360,14 +360,15 @@ private:
 	BOOL OnKeyDownItem(WPARAM wParam, LPARAM lParam);
 	BOOL OnCharItem(WPARAM wParam, LPARAM lParam);
 	void SelectItem(UINT iItem, UINT iSubItem, INT iCursor = 0);
-	void DrawItemText(HDC hDc, DWORD item, INT subItem);
+	void DrawItemText(HDC hDc, _In_range_( 0, INT_MAX ) DWORD item, _In_range_( 0, INT_MAX ) INT subItem);
 	
-
-	void DrawPartOfItemText(HDC hDc, RECT rc, RECT rcText, _In_reads_z_( bufferCount ) PCTSTR text, UINT beg, UINT length, eSelItem sel, eSelType type, rsize_t bufferCount);
+	_Pre_satisfies_( ( type == HEX_COLOR_REG ) || ( type == HEX_COLOR_SEL ) || ( type == HEX_COLOR_DIFF ) )
+	_Pre_satisfies_( ( sel == HEX_ITEM_FIRST ) || ( sel == HEX_ITEM_LAST ) || ( sel == HEX_ITEM_MIDDLE ) || ( sel == HEX_ITEM_MIDDLE_FULL ) )
+	void DrawPartOfItemText(HDC hDc, RECT rc, RECT rcText, _In_reads_z_( bufferCount ) PCTSTR text, _In_range_( 0, length ) UINT beg, _In_range_( 0, bufferCount ) UINT length, eSelItem sel, eSelType type, rsize_t bufferCount);
 	
 	
 	template<size_t count>
-	void DrawPartOfItemText(HDC hDc, RECT rc, RECT rcText, _In_z_ TCHAR (&text)[count], UINT beg, UINT length, eSelItem sel, eSelType type) {
+	void DrawPartOfItemText(HDC hDc, RECT rc, RECT rcText, _In_z_ TCHAR (&text)[count], _In_range_( 0, length ) UINT beg, _In_range_( 0, count ) UINT length, _Pre_satisfies_( ( sel == HEX_ITEM_FIRST ) || ( sel == HEX_ITEM_LAST ) || ( sel == HEX_ITEM_MIDDLE ) || ( sel == HEX_ITEM_MIDDLE_FULL ) ) eSelItem sel, _Pre_satisfies_( ( type == HEX_COLOR_REG ) || ( type == HEX_COLOR_SEL ) || ( type == HEX_COLOR_DIFF ) ) eSelType type) {
 		DrawPartOfItemText( hDc, rc, rcText, text, beg, length, sel, type, count );
 		}
 

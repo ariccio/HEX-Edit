@@ -24,8 +24,12 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
 
 typedef HRESULT (WINAPI * ETDTProc) (HWND, DWORD);
-#define CB_SETMINVISIBLE 0x1701
 
+#ifndef CB_SETMINVISIBLE
+#define CB_SETMINVISIBLE 0x1701
+#else
+static_assert( CB_SETMINVISIBLE == 0x1701, "bad assumption!" );
+#endif
 
 
 extern char	hexMask[256][3];

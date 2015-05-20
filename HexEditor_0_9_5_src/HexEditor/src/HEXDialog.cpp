@@ -447,342 +447,343 @@ LRESULT HexEdit::runProcParent(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lP
 
 LRESULT HexEdit::runProcList(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
-	if (_pCurProp != NULL)
+	if ( _pCurProp == NULL )
 	{
-		switch (Message)
+		return ::CallWindowProc(_hDefaultListProc, hwnd, Message, wParam, lParam);
+	}
+
+	switch (Message)
+	{
+		case WM_SETFOCUS:
 		{
-			case WM_SETFOCUS:
+			if (_pCurProp->isVisible == TRUE)
 			{
-				if (_pCurProp->isVisible == TRUE)
+				if (((HWND)wParam != _hParentHandle) && ((HWND)wParam != _hParent))
 				{
-					if (((HWND)wParam != _hParentHandle) && ((HWND)wParam != _hParent))
-					{
-						SetFocusNpp(_hParentHandle);
-						InvalidateNotepad();
-					}
-					else if ((0x80 & ::GetKeyState(VK_CONTROL)) == ((HWND)wParam != _hParent))
-					{
-						SetFocusNpp(_hParentHandle);
-					}
+					SetFocusNpp(_hParentHandle);
+					InvalidateNotepad();
 				}
+				else if ((0x80 & ::GetKeyState(VK_CONTROL)) == ((HWND)wParam != _hParent))
+				{
+					SetFocusNpp(_hParentHandle);
+				}
+			}
 
-				/* check menu and tb icon */
-				checkMenu(_pCurProp->isVisible);
-				RestartCursor();
+			/* check menu and tb icon */
+			checkMenu(_pCurProp->isVisible);
+			RestartCursor();
+			break;
+		}
+		case WM_LBUTTONDOWN:
+		{
+			LV_HITTESTINFO	info;
+
+			/* get selected sub item */
+			info.pt.x = LOWORD(lParam);
+			info.pt.y = HIWORD(lParam);
+			ListView_SubItemHitTest(_hListCtrl, &info);
+
+			/* if it's not within scope break */
+			if ((info.iItem == -1) || (info.iSubItem == -1)) {
 				break;
 			}
-			case WM_LBUTTONDOWN:
+
+			if (info.iSubItem == 0)
 			{
-				LV_HITTESTINFO	info;
+				ToggleBookmark(info.iItem);
+				return TRUE;
+			}
+			else
+			{
+				/* change edit type */
+				_pCurProp->editType = (info.iSubItem == DUMP_FIELD)? HEX_EDIT_ASCII : HEX_EDIT_HEX;
 
-				/* get selected sub item */
-				info.pt.x = LOWORD(lParam);
-				info.pt.y = HIWORD(lParam);
-				ListView_SubItemHitTest(_hListCtrl, &info);
-
-				/* if it's not within scope break */
-				if ((info.iItem == -1) || (info.iSubItem == -1)) {
-					break;
+				/* keep sure that selection is off */
+				if (!0x80 & ::GetKeyState(VK_SHIFT)) {
+					_pCurProp->isSel	= FALSE;
 				}
 
-				if (info.iSubItem == 0)
-				{
-					ToggleBookmark(info.iItem);
-					return TRUE;
+				/* goto position in parent view */
+				if (_pCurProp->editType == HEX_EDIT_HEX) {
+					OnMouseClickItem(wParam, lParam);
+				} else {
+					OnMouseClickDump(wParam, lParam);
 				}
-				else
-				{
-					/* change edit type */
-					_pCurProp->editType = (info.iSubItem == DUMP_FIELD)? HEX_EDIT_ASCII : HEX_EDIT_HEX;
+				UpdateListChanges();
 
-					/* keep sure that selection is off */
-					if (!0x80 & ::GetKeyState(VK_SHIFT)) {
-						_pCurProp->isSel	= FALSE;
-					}
+				/* store last position */
+				_x = LOWORD(lParam);
+				_y = HIWORD(lParam);
+				_isLBtnDown = TRUE;
+			}
+			break;
+		}
+		case WM_LBUTTONUP:
+		{
+			_isLBtnDown = FALSE;
+			break;
+		}
+		case WM_RBUTTONDOWN:
+		{
+			_isRBtnDown = TRUE;
+			SetFocusNpp(_hParent);
+			::SendMessage(_hParentHandle, Message, wParam, lParam);
+			break;
+		}
+		case WM_RBUTTONUP:
+		{
+			::SetFocus(_hListCtrl);
+			InvalidateNotepad();
+			if ((_isWheel == FALSE) && (_isRBtnDown == TRUE))
+			{
+				POINT	pt = {LOWORD(lParam), HIWORD(lParam)};
+				::ClientToScreen(_hParentHandle, &pt);
+				TrackMenu(pt);
+			}
 
-					/* goto position in parent view */
-					if (_pCurProp->editType == HEX_EDIT_HEX) {
-						OnMouseClickItem(wParam, lParam);
-					} else {
-						OnMouseClickDump(wParam, lParam);
-					}
-					UpdateListChanges();
-
-					/* store last position */
-					_x = LOWORD(lParam);
-					_y = HIWORD(lParam);
-					_isLBtnDown = TRUE;
-				}
-				break;
-			}
-			case WM_LBUTTONUP:
+			_isRBtnDown = FALSE;
+			_isWheel	= FALSE;
+			break;
+		}
+		case WM_MBUTTONDOWN:
+		{
+			if ((_pCurProp->isVisible == TRUE) && (wParam & MK_CONTROL))
 			{
-				_isLBtnDown = FALSE;
-				break;
+				ZoomRestore();
+				return TRUE;
 			}
-			case WM_RBUTTONDOWN:
+			break;
+		}
+		case WM_MOUSEWHEEL:
+		{
+			if (_pCurProp->isVisible == TRUE)
 			{
-				_isRBtnDown = TRUE;
-				SetFocusNpp(_hParent);
-				::SendMessage(_hParentHandle, Message, wParam, lParam);
-				break;
-			}
-			case WM_RBUTTONUP:
-			{
-				::SetFocus(_hListCtrl);
-				InvalidateNotepad();
-				if ((_isWheel == FALSE) && (_isRBtnDown == TRUE))
-				{
-					POINT	pt = {LOWORD(lParam), HIWORD(lParam)};
-					::ClientToScreen(_hParentHandle, &pt);
-					TrackMenu(pt);
-				}
-
-				_isRBtnDown = FALSE;
-				_isWheel	= FALSE;
-				break;
-			}
-			case WM_MBUTTONDOWN:
-			{
-				if ((_pCurProp->isVisible == TRUE) && (wParam & MK_CONTROL))
-				{
-					ZoomRestore();
-					return TRUE;
-				}
-				break;
-			}
-			case WM_MOUSEWHEEL:
-			{
-				if (_pCurProp->isVisible == TRUE)
-				{
-       				if (_isRBtnDown == TRUE)
-       				{
-       					_isWheel = TRUE;
-   						::SendMessage(_hParent, Message, wParam, lParam);
-   						return TRUE;
-   					}
-   					else if (wParam & MK_CONTROL)
-   					{
-   						if ((short)HIWORD(wParam) >= WHEEL_DELTA) {
-   							ZoomIn();
-   						} else {
-   							ZoomOut();
-   						}
-   						return TRUE;
-   					}
+       			if (_isRBtnDown == TRUE)
+       			{
+       				_isWheel = TRUE;
+   					::SendMessage(_hParent, Message, wParam, lParam);
+   					return TRUE;
    				}
-				break;
-			}
-			case WM_MOUSEMOVE:
+   				else if (wParam & MK_CONTROL)
+   				{
+   					if ((short)HIWORD(wParam) >= WHEEL_DELTA) {
+   						ZoomIn();
+   					} else {
+   						ZoomOut();
+   					}
+   					return TRUE;
+   				}
+   			}
+			break;
+		}
+		case WM_MOUSEMOVE:
+		{
+			if ((_isLBtnDown == TRUE) && ((_x != LOWORD(lParam)) || (_y != HIWORD(lParam))))
 			{
-				if ((_isLBtnDown == TRUE) && ((_x != LOWORD(lParam)) || (_y != HIWORD(lParam))))
+				if (_pCurProp->isSel == FALSE)
 				{
-					if (_pCurProp->isSel == FALSE)
+					if (0x80 & ::GetKeyState(VK_LMENU))
 					{
-						if (0x80 & ::GetKeyState(VK_LMENU))
-						{
-							_pCurProp->selection = HEX_SEL_BLOCK;
-						}
-						else
-						{
-							_pCurProp->selection = HEX_SEL_NORM;
-						}
-						_pCurProp->isSel = TRUE;
-
-						if (_pCurProp->editType == HEX_EDIT_HEX)
-						{
-							/* correct the cursor position */
-							_pCurProp->anchorPos   = (_pCurProp->anchorSubItem-1) * _pCurProp->bits + _pCurProp->anchorPos / FACTOR;
-						}
-						else
-						{
-							/* correct column */
-							_pCurProp->anchorSubItem = _pCurProp->anchorPos / _pCurProp->bits + 1;
-						}
-					}
-					
-					LV_HITTESTINFO	info;
-
-					::GetCursorPos(&info.pt);
-					::ScreenToClient(_hListCtrl, &info.pt);
-					ListView_SubItemHitTest(_hListCtrl, &info);
-
-					/* test if last row is empty */
-					if ((_currLength == ((GetItemCount()) * VIEW_ROW)) &&
-						((info.iItem + 1) == ListView_GetItemCount(_hListCtrl)))
-						return FALSE;
-
-					/* store row */
-					_pCurProp->cursorItem	= info.iItem;
-
-					if (info.iSubItem <= 0)
-						return FALSE;
-
-
-					if (info.iSubItem == DUMP_FIELD)
-					{
-						/* calculate cursor */
-						_pCurProp->cursorPos = CalcCursorPos(info);
-
-						/* correct view */
-						if (ListView_GetItemCount(_hListCtrl) == (info.iItem + 1))
-						{
-							UINT pos = _currLength - info.iItem * VIEW_ROW;
-							if (_pCurProp->cursorPos > pos)
-							{
-								_pCurProp->cursorPos = pos;
-							}
-						}
-
-						/* calculate column */
-						_pCurProp->cursorSubItem   = _pCurProp->cursorPos / _pCurProp->bits + 1;
+						_pCurProp->selection = HEX_SEL_BLOCK;
 					}
 					else
 					{
-						/* calculate cursor */
-						UINT	cursorPos = CalcCursorPos(info) / FACTOR;
+						_pCurProp->selection = HEX_SEL_NORM;
+					}
+					_pCurProp->isSel = TRUE;
 
-						_pCurProp->cursorPos = (info.iSubItem-1) * _pCurProp->bits + cursorPos;
+					if (_pCurProp->editType == HEX_EDIT_HEX)
+					{
+						/* correct the cursor position */
+						_pCurProp->anchorPos   = (_pCurProp->anchorSubItem-1) * _pCurProp->bits + _pCurProp->anchorPos / FACTOR;
+					}
+					else
+					{
+						/* correct column */
+						_pCurProp->anchorSubItem = _pCurProp->anchorPos / _pCurProp->bits + 1;
+					}
+				}
+					
+				LV_HITTESTINFO	info;
 
-						/* calculate column */
-						_pCurProp->cursorSubItem   = info.iSubItem;
+				::GetCursorPos(&info.pt);
+				::ScreenToClient(_hListCtrl, &info.pt);
+				ListView_SubItemHitTest(_hListCtrl, &info);
 
-						if (cursorPos >= (UINT)_pCurProp->bits)
+				/* test if last row is empty */
+				if ((_currLength == ((GetItemCount()) * VIEW_ROW)) &&
+					((info.iItem + 1) == ListView_GetItemCount(_hListCtrl)))
+					return FALSE;
+
+				/* store row */
+				_pCurProp->cursorItem	= info.iItem;
+
+				if (info.iSubItem <= 0)
+					return FALSE;
+
+
+				if (info.iSubItem == DUMP_FIELD)
+				{
+					/* calculate cursor */
+					_pCurProp->cursorPos = CalcCursorPos(info);
+
+					/* correct view */
+					if (ListView_GetItemCount(_hListCtrl) == (info.iItem + 1))
+					{
+						UINT pos = _currLength - info.iItem * VIEW_ROW;
+						if (_pCurProp->cursorPos > pos)
 						{
-							/* offset */
-							_pCurProp->cursorSubItem++;
-						}
-
-						if ((ListView_GetItemCount(_hListCtrl) == (info.iItem + 1)) && 
-							(_currLength < (_pCurProp->cursorItem * VIEW_ROW + _pCurProp->cursorPos + 1)))
-						{
-							_pCurProp->cursorPos = (_currLength % VIEW_ROW);
-							_pCurProp->cursorSubItem   = ((_currLength % VIEW_ROW)/_pCurProp->bits) + 1;
+							_pCurProp->cursorPos = pos;
 						}
 					}
-					UpdateListChanges();
+
+					/* calculate column */
+					_pCurProp->cursorSubItem   = _pCurProp->cursorPos / _pCurProp->bits + 1;
 				}
-				break;
-			}
-			case WM_KEYDOWN:
-			case WM_SYSKEYDOWN:
-			{
-                UINT uCmdID = MapShortCutToMenuId((BYTE)wParam);
-                switch (uCmdID)
+				else
 				{
-					case IDM_EDIT_SELECTALL:
-						SelectAll();
-						return FALSE;
-					case IDM_EDIT_CUT:
-						Cut();
-						return FALSE;
-					case IDM_EDIT_COPY:
-						Copy();
-						return FALSE;
-					case IDM_EDIT_PASTE:
-						Paste();
-						return FALSE;
-                    case IDM_EDIT_DELETE:
-                        Delete();
-                        return FALSE;
-		            case IDM_EDIT_INS_TAB:
-			            TabMessage();
-                        return FALSE;
-					case IDM_EDIT_REDO:
-                    case IDM_EDIT_UNDO:
-                    case IDM_VIEW_ZOOMIN:
-                    case IDM_VIEW_ZOOMOUT:
-                    case IDM_VIEW_ZOOMRESTORE:
-						::SendMessage(_hParent, WM_COMMAND, uCmdID, 0);
-						return FALSE;
-					default:
-				        if (_pCurProp->editType == HEX_EDIT_HEX) {
-					        if (OnKeyDownItem(wParam, lParam) == FALSE)
-						        return FALSE;
-				        } else {
-					        if (OnKeyDownDump(wParam, lParam) == FALSE)
-						        return FALSE;
-				        }
-                        break;
-                }
-                break;
-            }
-            case WM_CHAR:
-            {
-                /* in case additional system keys are set ignore call of function */
-                if (((0x80 & ::GetKeyState(VK_CONTROL)) == 0x80) ||
-                    ((0x80 & ::GetKeyState(VK_MENU)) == 0x80)) {
-                    return FALSE;
-                }
+					/* calculate cursor */
+					UINT	cursorPos = CalcCursorPos(info) / FACTOR;
 
-				if (_pCurProp->editType == HEX_EDIT_HEX) {
-					if (OnCharItem(wParam, lParam) == FALSE)
-						return FALSE;
-				} else {
-					if (OnCharDump(wParam, lParam) == FALSE)
-						return FALSE;
+					_pCurProp->cursorPos = (info.iSubItem-1) * _pCurProp->bits + cursorPos;
+
+					/* calculate column */
+					_pCurProp->cursorSubItem   = info.iSubItem;
+
+					if (cursorPos >= (UINT)_pCurProp->bits)
+					{
+						/* offset */
+						_pCurProp->cursorSubItem++;
+					}
+
+					if ((ListView_GetItemCount(_hListCtrl) == (info.iItem + 1)) && 
+						(_currLength < (_pCurProp->cursorItem * VIEW_ROW + _pCurProp->cursorPos + 1)))
+					{
+						_pCurProp->cursorPos = (_currLength % VIEW_ROW);
+						_pCurProp->cursorSubItem   = ((_currLength % VIEW_ROW)/_pCurProp->bits) + 1;
+					}
 				}
-				break;
+				UpdateListChanges();
 			}
-			case WM_DROPFILES:
-			{
-				HDROP hDrop	= (HDROP)wParam;
-
-				::SetFocus(_hParentHandle);
-
-				INT filesDropped = ::DragQueryFile(hDrop, 0xffffffff, NULL, 0);
-				for (INT i = 0 ; i < filesDropped ; ++i)
-				{
-					TCHAR pszFilePath[MAX_PATH];
-					::DragQueryFile(hDrop, i, pszFilePath, MAX_PATH);
-					::SendMessage(_hParent, NPPM_DOOPEN, 0, (LPARAM)pszFilePath);
-				}
-				::DragFinish(hDrop);
-
-				if (::IsIconic(_hParent))
-				{
-					::ShowWindow(_hParent, SW_RESTORE);
-				}
-				::SetForegroundWindow(_hParent);
-				return TRUE;
-			}
-			case WM_ERASEBKGND:
-			{
-				HBRUSH	hbrush	= ::CreateSolidBrush(getColor(HEX_COLOR_REG_BK));
-
-				/* get the not used space */
-				UINT	right;
-				RECT	rcList, rc;
-
-				::GetWindowRect(_hListCtrl, &rcList);
-				ScreenToClient(_hListCtrl, &rcList);
-
-				/* fill left gray fields */
-				rc = rcList;
-				rc.right = rc.left + 6;
-				right = rc.right;
-				::FillRect((HDC)wParam, &rc, hbrush);
-
-				/* fill left not drawing rect */
-				ListView_GetSubItemRect(_hListCtrl, 0, _pCurProp->columns+1, LVIR_BOUNDS, &rc);
-				rcList.left = rc.right;
-				::FillRect((HDC)wParam, &rcList, hbrush);
-
-				/* fill bottom rect if is missed */
-				rcList.right = rcList.left;
-				rcList.left  = right;
-				ListView_GetItemRect(_hListCtrl, ListView_GetItemCount(_hListCtrl)-1, &rc, LVIR_BOUNDS);
-				rcList.top = rc.bottom;
-				::FillRect((HDC)wParam, &rcList, hbrush);
-
-				::DeleteObject(hbrush);
-				return FALSE;
-			}
-			default:
-				break;
+			break;
 		}
-	}
+		case WM_KEYDOWN:
+		case WM_SYSKEYDOWN:
+		{
+            UINT uCmdID = MapShortCutToMenuId((BYTE)wParam);
+            switch (uCmdID)
+			{
+				case IDM_EDIT_SELECTALL:
+					SelectAll();
+					return FALSE;
+				case IDM_EDIT_CUT:
+					Cut();
+					return FALSE;
+				case IDM_EDIT_COPY:
+					Copy();
+					return FALSE;
+				case IDM_EDIT_PASTE:
+					Paste();
+					return FALSE;
+                case IDM_EDIT_DELETE:
+                    Delete();
+                    return FALSE;
+		        case IDM_EDIT_INS_TAB:
+			        TabMessage();
+                    return FALSE;
+				case IDM_EDIT_REDO:
+                case IDM_EDIT_UNDO:
+                case IDM_VIEW_ZOOMIN:
+                case IDM_VIEW_ZOOMOUT:
+                case IDM_VIEW_ZOOMRESTORE:
+					::SendMessage(_hParent, WM_COMMAND, uCmdID, 0);
+					return FALSE;
+				default:
+				    if (_pCurProp->editType == HEX_EDIT_HEX) {
+					    if (OnKeyDownItem(wParam, lParam) == FALSE)
+						    return FALSE;
+				    } else {
+					    if (OnKeyDownDump(wParam, lParam) == FALSE)
+						    return FALSE;
+				    }
+                    break;
+            }
+            break;
+        }
+        case WM_CHAR:
+        {
+            /* in case additional system keys are set ignore call of function */
+            if (((0x80 & ::GetKeyState(VK_CONTROL)) == 0x80) ||
+                ((0x80 & ::GetKeyState(VK_MENU)) == 0x80)) {
+                return FALSE;
+            }
 
+			if (_pCurProp->editType == HEX_EDIT_HEX) {
+				if (OnCharItem(wParam, lParam) == FALSE)
+					return FALSE;
+			} else {
+				if (OnCharDump(wParam, lParam) == FALSE)
+					return FALSE;
+			}
+			break;
+		}
+		case WM_DROPFILES:
+		{
+			HDROP hDrop	= (HDROP)wParam;
+
+			::SetFocus(_hParentHandle);
+
+			INT filesDropped = ::DragQueryFile(hDrop, 0xffffffff, NULL, 0);
+			for (INT i = 0 ; i < filesDropped ; ++i)
+			{
+				TCHAR pszFilePath[MAX_PATH];
+				::DragQueryFile(hDrop, i, pszFilePath, MAX_PATH);
+				::SendMessage(_hParent, NPPM_DOOPEN, 0, (LPARAM)pszFilePath);
+			}
+			::DragFinish(hDrop);
+
+			if (::IsIconic(_hParent))
+			{
+				::ShowWindow(_hParent, SW_RESTORE);
+			}
+			::SetForegroundWindow(_hParent);
+			return TRUE;
+		}
+		case WM_ERASEBKGND:
+		{
+			HBRUSH	hbrush	= ::CreateSolidBrush(getColor(HEX_COLOR_REG_BK));
+
+			/* get the not used space */
+			UINT	right;
+			RECT	rcList, rc;
+
+			::GetWindowRect(_hListCtrl, &rcList);
+			ScreenToClient(_hListCtrl, &rcList);
+
+			/* fill left gray fields */
+			rc = rcList;
+			rc.right = rc.left + 6;
+			right = rc.right;
+			::FillRect((HDC)wParam, &rc, hbrush);
+
+			/* fill left not drawing rect */
+			ListView_GetSubItemRect(_hListCtrl, 0, _pCurProp->columns+1, LVIR_BOUNDS, &rc);
+			rcList.left = rc.right;
+			::FillRect((HDC)wParam, &rcList, hbrush);
+
+			/* fill bottom rect if is missed */
+			rcList.right = rcList.left;
+			rcList.left  = right;
+			ListView_GetItemRect(_hListCtrl, ListView_GetItemCount(_hListCtrl)-1, &rc, LVIR_BOUNDS);
+			rcList.top = rc.bottom;
+			::FillRect((HDC)wParam, &rcList, hbrush);
+
+			::DeleteObject(hbrush);
+			return FALSE;
+		}
+		default:
+			break;
+	}
 	return ::CallWindowProc(_hDefaultListProc, hwnd, Message, wParam, lParam);
 }
 
@@ -792,7 +793,7 @@ void HexEdit::UpdateDocs(_In_reads_(numFiles) const PCTSTR* pFiles, UINT numFile
 	/* update current visible line */
 	GetLineVis();
 
-	vector<tHexProp>	tmpList;
+	std::vector<tHexProp>	tmpList;
 
 	/* attach (un)known files */
 	for (size_t i = 0; i < numFiles; i++)
@@ -1611,7 +1612,6 @@ void HexEdit::Paste(void)
 	}
 	else
 	{
-		HWND	hSciTgt	= NULL;
 		UINT	posBeg	= GetAnchor();
 		UINT	posEnd	= GetCurrentPos();
 
@@ -1619,7 +1619,7 @@ void HexEdit::Paste(void)
 			posBeg = posEnd;
 
 		/* copy data into scintilla handle (encoded if necessary) */
-		hSciTgt = (HWND)::SendMessage(_hParent, NPPM_CREATESCINTILLAHANDLE, 0, (LPARAM)_hSelf);
+		const HWND hSciTgt = (HWND)::SendMessage(_hParent, NPPM_CREATESCINTILLAHANDLE, 0, (LPARAM)_hSelf);
 		
 		switch (g_clipboard.selection)
 		{
@@ -2524,12 +2524,9 @@ BOOL HexEdit::OnKeyDownItem(WPARAM wParam, LPARAM lParam)
 
 BOOL HexEdit::OnCharItem(WPARAM wParam, LPARAM lParam)
 {
-	CHAR	text[65];
-	UINT	posBeg	= 0;
-	UINT	textPos = 0;
-	DWORD	start	= 0;
-	DWORD	end		= 0;
-	BOOL	newLine	= FALSE;
+	
+	
+	
 
 	if (_pCurProp->isBin == FALSE) {
 		if (((wParam < 0x30) || (wParam > 0x66)) ||
@@ -2546,16 +2543,24 @@ BOOL HexEdit::OnCharItem(WPARAM wParam, LPARAM lParam)
 		SetSelection(GetAnchor(), GetAnchor());
 	}
 
+	UINT	posBeg_temp	= 0;
+	UINT	textPos_temp = 0;
+
 	if (_pCurProp->isLittle == FALSE) {
-		textPos = _pCurProp->cursorPos / FACTOR;
-		posBeg  = _pCurProp->cursorItem * VIEW_ROW + (_pCurProp->cursorSubItem-1) * _pCurProp->bits + textPos;
+		textPos_temp = _pCurProp->cursorPos / FACTOR;
+		posBeg_temp  = _pCurProp->cursorItem * VIEW_ROW + (_pCurProp->cursorSubItem-1) * _pCurProp->bits + textPos_temp;
 	} else if (FULL_SUBITEM) {
-		textPos = (_pCurProp->bits-1) - _pCurProp->cursorPos / FACTOR;
-		posBeg  = _pCurProp->cursorItem * VIEW_ROW + (_pCurProp->cursorSubItem-1) * _pCurProp->bits + textPos;
+		textPos_temp = (_pCurProp->bits-1) - _pCurProp->cursorPos / FACTOR;
+		posBeg_temp  = _pCurProp->cursorItem * VIEW_ROW + (_pCurProp->cursorSubItem-1) * _pCurProp->bits + textPos_temp;
 	} else {
-		textPos = 0;
-		posBeg  = _pCurProp->cursorItem * VIEW_ROW + (_pCurProp->cursorSubItem-1) * _pCurProp->bits;
+		textPos_temp = 0;
+		posBeg_temp  = _pCurProp->cursorItem * VIEW_ROW + (_pCurProp->cursorSubItem-1) * _pCurProp->bits;
 	}
+
+	const UINT posBeg = posBeg_temp;
+	const UINT textPos = textPos_temp;
+	
+	CHAR	text[ 65 ] = { 0 };
 
 	/* prepare text */
 #ifdef UNICODE
@@ -2601,24 +2606,27 @@ BOOL HexEdit::OnCharItem(WPARAM wParam, LPARAM lParam)
 }
 
 
-void HexEdit::DrawItemText(HDC hDc, DWORD item, INT subItem)
+void HexEdit::DrawItemText(HDC hDc, _In_range_( 0, INT_MAX ) DWORD item, _In_range_( 0, INT_MAX ) INT subItem)
 {
-	RECT		rc;
-	RECT		rcText;
+	RECT		rc_temp;
 	SIZE		size;
 	TCHAR		text[65] = { 0 };
-	RECT		rcCursor;
 
 	/* get list informations */
 	ListView_GetItemText(_hListCtrl, item, subItem, text, 65);
-	ListView_GetSubItemRect(_hListCtrl, item, subItem, LVIR_BOUNDS, &rc);
+	ListView_GetSubItemRect(_hListCtrl, item, subItem, LVIR_BOUNDS, &rc_temp);
+	const RECT rc = rc_temp;
 
 	/* calculate text begin position */
 	::GetTextExtentPoint(hDc, text, SUBITEM_LENGTH, &size);
-	rcText			= rc;
-	rcText.left		+= (rc.right  - rc.left - size.cx) / 2;
-	rcCursor		= rcText;
+	RECT rcText_temp			= rc;
+	
+	rcText_temp.left		+= (rc.right  - rc.left - size.cx) / 2;
+	RECT rcCursor		= rcText_temp;
 	rcCursor.right = rcCursor.left;
+
+	const RECT rcText = rcText_temp;
+	
 
 	/* draw normal text */
 	DrawPartOfItemText(hDc, rc, rcText, text, 0, SUBITEM_LENGTH, HEX_ITEM_MIDDLE, HEX_COLOR_REG);
@@ -2626,10 +2634,10 @@ void HexEdit::DrawItemText(HDC hDc, DWORD item, INT subItem)
 	/* draw compare highlight */
 	if (_pCurProp->pCmpResult != NULL)
 	{
-		eSelItem	sel = HEX_ITEM_MIDDLE;
-		INT			pos = (item * _pCurProp->columns + subItem - 1) - _pCurProp->pCmpResult->offCmpCache;
+		const INT			pos = (item * _pCurProp->columns + subItem - 1) - _pCurProp->pCmpResult->offCmpCache;
 		if (pos < CACHE_SIZE)
 		{
+			eSelItem	sel = HEX_ITEM_MIDDLE;
 			if (pos == 0) {
 				if ((_pCurProp->pCmpResult->cmpCache[0] == TRUE) && (_pCurProp->pCmpResult->cmpCache[1] == FALSE)) {
 					DrawPartOfItemText(hDc, rc, rcText, text, 0, SUBITEM_LENGTH, HEX_ITEM_MIDDLE, HEX_COLOR_DIFF);
@@ -2660,7 +2668,6 @@ void HexEdit::DrawItemText(HDC hDc, DWORD item, INT subItem)
 		/* paint cursor */
 		if (item == _pCurProp->cursorItem)
 		{
-			UINT	posCurBeg = 0;
 			if ((_pCurProp->editType == HEX_EDIT_HEX) && (subItem == _pCurProp->cursorSubItem)) {
 				::GetTextExtentPoint(hDc, text, _pCurProp->cursorPos, &size);
 				rcCursor.left += size.cx;
@@ -2710,8 +2717,8 @@ void HexEdit::DrawItemText(HDC hDc, DWORD item, INT subItem)
 			lastCur  = _pCurProp->anchorPos;
 		}
 
-		INT			factor1  = (firstCur % _pCurProp->bits) * FACTOR;
-		INT			factor2  = (lastCur  % _pCurProp->bits) * FACTOR;
+		const INT			factor1  = (firstCur % _pCurProp->bits) * FACTOR;
+		const INT			factor2  = (lastCur  % _pCurProp->bits) * FACTOR;
 
 		switch (_pCurProp->selection)
 		{
@@ -2845,7 +2852,9 @@ void HexEdit::DrawItemText(HDC hDc, DWORD item, INT subItem)
 	}
 }
 
-void HexEdit::DrawPartOfItemText(HDC hDc, RECT rc, RECT rcText, _In_reads_z_( bufferCount ) LPCTSTR text, UINT beg, UINT length, eSelItem sel, eSelType type, rsize_t bufferCount)
+_Pre_satisfies_( ( type == HEX_COLOR_REG ) || ( type == HEX_COLOR_SEL ) || ( type == HEX_COLOR_DIFF ) )
+_Pre_satisfies_( ( sel == HEX_ITEM_FIRST ) || ( sel == HEX_ITEM_LAST ) || ( sel == HEX_ITEM_MIDDLE ) || ( sel == HEX_ITEM_MIDDLE_FULL ) )
+void HexEdit::DrawPartOfItemText(HDC hDc, RECT rc, RECT rcText, _In_reads_z_( bufferCount ) PCTSTR text, _In_range_( 0, length ) UINT beg, _In_range_( 0, bufferCount ) UINT length, eSelItem sel, eSelType type, rsize_t bufferCount)
 {
 	SIZE		size		= {0};
 	UINT		diff		= 0;

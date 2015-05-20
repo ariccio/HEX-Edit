@@ -50,7 +50,7 @@ BOOL CALLBACK HelpDlg::run_dlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARA
 			{
 				case IDOK :
 				case IDCANCEL :
-					display(FALSE);
+					display(false);
 					return TRUE;
 
 				default :
