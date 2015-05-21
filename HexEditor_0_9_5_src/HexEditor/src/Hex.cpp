@@ -38,6 +38,7 @@
 
 
 
+
 namespace {
 	const TCHAR addWidth[]		= _T("Address Width");
 	const TCHAR columns[]		= _T("Columns");
@@ -1065,8 +1066,8 @@ void SystemUpdate(void)
 		/* update doc information */
 		INT docCnt1		= (INT)::SendMessage(nppData._nppHandle, NPPM_GETNBOPENFILES, 0, (LPARAM)PRIMARY_VIEW);
 		INT docCnt2		= (INT)::SendMessage(nppData._nppHandle, NPPM_GETNBOPENFILES, 0, (LPARAM)SECOND_VIEW);
-		PTSTR* fileNames1	= new PTSTR[docCnt1];
-		PTSTR* fileNames2	= new PTSTR[docCnt2];
+		std::unique_ptr<PTSTR[]> fileNames1	= std::make_unique<PTSTR[]>(docCnt1);
+		std::unique_ptr<PTSTR[]> fileNames2	= std::make_unique<PTSTR[]>(docCnt2);
 
 		if ((fileNames1 != NULL) && (fileNames2 != NULL))
 		{
@@ -1083,11 +1084,11 @@ void SystemUpdate(void)
 
 			if (isAllocOk == TRUE)
 			{
-				::SendMessage(nppData._nppHandle, NPPM_GETOPENFILENAMESPRIMARY, (WPARAM)fileNames1, (LPARAM)docCnt1);
-				hexEdit1.UpdateDocs(fileNames1, docCnt1, openDoc1);
+				::SendMessage(nppData._nppHandle, NPPM_GETOPENFILENAMESPRIMARY, (WPARAM)fileNames1.get(), (LPARAM)docCnt1);
+				hexEdit1.UpdateDocs(fileNames1.get(), docCnt1, openDoc1);
 
-				::SendMessage(nppData._nppHandle, NPPM_GETOPENFILENAMESSECOND, (WPARAM)fileNames2, (LPARAM)docCnt2);
-				hexEdit2.UpdateDocs(fileNames2, docCnt2, openDoc2);
+				::SendMessage(nppData._nppHandle, NPPM_GETOPENFILENAMESSECOND, (WPARAM)fileNames2.get(), (LPARAM)docCnt2);
+				hexEdit2.UpdateDocs(fileNames2.get(), docCnt2, openDoc2);
 
 				/* update edit */
 				if (currentSC == MAIN_VIEW)
@@ -1105,7 +1106,7 @@ void SystemUpdate(void)
 					delete[] fileNames1[i];
 					fileNames1[i] = nullptr;
 				}
-				delete[] fileNames1;
+				fileNames1.reset();
 				fileNames1 = nullptr;
 			}
 			if (fileNames2 != NULL)
@@ -1114,7 +1115,7 @@ void SystemUpdate(void)
 					delete[] fileNames2[i];
 					fileNames2[i] = nullptr;
 				}
-				delete[] fileNames2;
+				fileNames2.reset();
 				fileNames2 = nullptr;
 			}
 		}
