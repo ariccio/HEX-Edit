@@ -42,7 +42,6 @@ LRESULT ColorCombo::runProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 		case HEXM_PICKUP_COLOR:
 		{
 			setColor((COLORREF)wParam);
-
 			_pColorPopup->destroy();
             delete _pColorPopup;
 			_pColorPopup = NULL;
@@ -69,9 +68,9 @@ LRESULT ColorCombo::runProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 		{
 			if (_pColorPopup != NULL) {
 				_pColorPopup->destroy();
-				delete _pColorPopup;
-				_pColorPopup = NULL;
 			}
+			delete _pColorPopup;
+			_pColorPopup = NULL;
 			break;
 		}
         case WM_PAINT:

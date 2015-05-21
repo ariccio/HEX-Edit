@@ -262,10 +262,12 @@ const UINT g_iFontSize[G_FONTSIZE_MAX] = {8, 9, 10, 11, 12, 14, 16, 18, 20, 22};
 
 UINT ScintillaMsg(HWND hWnd, UINT message, WPARAM wParam = 0, LPARAM lParam = 0);
 
+UINT ScintillaMsg(UINT message, WPARAM wParam = 0, LPARAM lParam = 0);
+
 _Pre_satisfies_( end >= start )
 UINT ScintillaGetText(HWND hWnd, _Pre_writable_size_( ( end - start ) + 1 ) _Post_readable_size_( return ) _Post_z_ _Out_ char* text, INT start, INT end);
 
-UINT ScintillaMsg(UINT message, WPARAM wParam = 0, LPARAM lParam = 0);
+
 
 _Pre_satisfies_( end >= start )
 UINT ScintillaGetText(_Pre_writable_size_( ( end - start ) + 1 ) _Post_readable_size_( return ) _Post_z_ _Out_ char* text, INT start, INT end);

@@ -35,6 +35,8 @@
 #include <shlwapi.h>
 #include <shlobj.h>
 #include <assert.h>
+#include <array>
+#include <new>
 
 
 
@@ -65,6 +67,30 @@ namespace {
 	const TCHAR focusRect[]		= _T("Focus Rect");
 	const TCHAR HEXEDIT_INI[]	= _T("\\HexEditor.ini");
 	const TCHAR COMPARE_PATH[]	= _T("\\Compare");
+
+	void clearVecOfPaths( _Inout_ std::vector<PTSTR>* const vectorPaths ) {
+		for ( auto& ptr : (*vectorPaths) ) {
+			delete[ ] ptr;
+			ptr = nullptr;
+			}
+		vectorPaths->clear( );
+		return;
+		}
+
+	void allocateVecOfPaths( _Inout_ std::vector<PTSTR>* const vectorPaths, _In_ const INT docCnt ) {
+		for (INT i = 0; i < docCnt; i++) {
+			try {
+				PTSTR newPtr = new TCHAR[ MAX_PATH ];
+				vectorPaths->push_back( newPtr );
+				}
+			catch ( std::bad_alloc& ) {
+				clearVecOfPaths( vectorPaths );
+				throw;
+				}
+			}
+		}
+
+
 	}
 
 /* menu entry count */
@@ -90,7 +116,7 @@ NppData			nppData;
 HANDLE			g_hModule;
 HWND			g_HSource;
 HWND			g_hFindRepDlg;
-FuncItem		funcItem[nbFunc];
+std::array<FuncItem, nbFunc> funcItem;
 toolbarIcons	g_TBHex;
 
 
@@ -145,7 +171,10 @@ BOOL APIENTRY DllMain( HANDLE hModule,
 			_tcscpy_s(funcItem[8]._itemName, _T("&Help..."));
 
 			/* Set shortcuts */
-			funcItem[0]._pShKey = new ShortcutKey;
+			funcItem[0]._pShKey = new(std::nothrow)ShortcutKey;
+			if ( funcItem[ 0 ]._pShKey == NULL ) {
+				return FALSE;
+				}
 			funcItem[0]._pShKey->_isAlt		= true;
 			funcItem[0]._pShKey->_isCtrl	= true;
 			funcItem[0]._pShKey->_isShift	= true;
@@ -206,15 +235,15 @@ extern "C" __declspec(dllexport) void setInfo(NppData notpadPlusData)
 	loadSettings();
 
 	/* initial dialogs */
-	hexEdit1.init((HINSTANCE)g_hModule, nppData, iniFilePath);
-	hexEdit2.init((HINSTANCE)g_hModule, nppData, iniFilePath);
+	hexEdit1.init(static_cast<HINSTANCE>(g_hModule), nppData, iniFilePath);
+	hexEdit2.init(static_cast<HINSTANCE>(g_hModule), nppData, iniFilePath);
 	hexEdit1.SetParentNppHandle(nppData._scintillaMainHandle, MAIN_VIEW);
 	hexEdit2.SetParentNppHandle(nppData._scintillaSecondHandle, SUB_VIEW);
-	findRepDlg.init((HINSTANCE)g_hModule, nppData);
-	propDlg.init((HINSTANCE)g_hModule, nppData);
-	gotoDlg.init((HINSTANCE)g_hModule, nppData, iniFilePath);
-	patDlg.init((HINSTANCE)g_hModule, nppData);
-	helpDlg.init((HINSTANCE)g_hModule, nppData);
+	findRepDlg.init(static_cast<HINSTANCE>(g_hModule), nppData);
+	propDlg.init(static_cast<HINSTANCE>(g_hModule), nppData);
+	gotoDlg.init(static_cast<HINSTANCE>(g_hModule), nppData, iniFilePath);
+	patDlg.init(static_cast<HINSTANCE>(g_hModule), nppData);
+	helpDlg.init(static_cast<HINSTANCE>(g_hModule), nppData);
 
 	/* Subclassing for Notepad */
 	wndProcNotepad = (WNDPROC)SetWindowLongPtr(nppData._nppHandle, GWL_WNDPROC, (LPARAM)SubWndProcNotepad);
@@ -228,10 +257,10 @@ extern "C" __declspec(dllexport) LPCTSTR getName()
 	return PLUGIN_NAME;
 }
 
-extern "C" __declspec(dllexport) FuncItem * getFuncsArray(INT *nbF)
+extern "C" __declspec(dllexport) FuncItem* getFuncsArray(_Out_ INT *nbF)
 {
 	*nbF = nbFunc;
-	return funcItem;
+	return funcItem.data();
 }
 
 /***
@@ -296,9 +325,9 @@ extern "C" __declspec(dllexport) void beNotified(SCNotification *notifyCode)
 			case NPPN_TBMODIFICATION:
 			{
 				/* change menu language */
-				NLChangeNppMenu((HINSTANCE)g_hModule, nppData._nppHandle, PLUGIN_NAME, funcItem, nbFunc);
+				NLChangeNppMenu(static_cast<HINSTANCE>(g_hModule), nppData._nppHandle, PLUGIN_NAME, funcItem.data(), nbFunc);
 
-				g_TBHex.hToolbarBmp = (HBITMAP)::LoadImage((HINSTANCE)g_hModule, MAKEINTRESOURCE(IDB_TB_HEX), IMAGE_BITMAP, 0, 0, (LR_DEFAULTSIZE | LR_LOADMAP3DCOLORS));
+				g_TBHex.hToolbarBmp = (HBITMAP)::LoadImage(static_cast<HINSTANCE>(g_hModule), MAKEINTRESOURCE(IDB_TB_HEX), IMAGE_BITMAP, 0, 0, (LR_DEFAULTSIZE | LR_LOADMAP3DCOLORS));
 				::SendMessage(nppData._nppHandle, NPPM_ADDTOOLBARICON, (WPARAM)funcItem[0]._cmdID, (LPARAM)&g_TBHex);
 				break;
 			}
@@ -658,7 +687,7 @@ UINT ScintillaGetText(HWND hWnd, _Pre_writable_size_( ( end - start ) + 1 ) _Pos
  */
 void UpdateCurrentHScintilla(void)
 {
-	UINT		newSC		= MAIN_VIEW;
+	UINT newSC = MAIN_VIEW;
 
 	::SendMessage(nppData._nppHandle, NPPM_GETCURRENTSCINTILLA, 0, (LPARAM)&newSC);
 	g_HSource = (newSC == MAIN_VIEW)?nppData._scintillaMainHandle:nppData._scintillaSecondHandle;
@@ -737,13 +766,13 @@ void openHelpDlg(void)
  */
 LRESULT CALLBACK SubWndProcNotepad(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-	LRESULT ret = 0;
+	//LRESULT ret = 0;
 
 	switch (message)
 	{
 		case WM_ACTIVATE:
 		{
-			ret = ::CallWindowProc(wndProcNotepad, hWnd, message, wParam, lParam);
+			const LRESULT ret = ::CallWindowProc(wndProcNotepad, hWnd, message, wParam, lParam);
 			if (currentSC == MAIN_VIEW)
 			{
 				::SendMessage(hexEdit1.getHSelf(), message, wParam, lParam);
@@ -758,7 +787,7 @@ LRESULT CALLBACK SubWndProcNotepad(HWND hWnd, UINT message, WPARAM wParam, LPARA
 		}
         case WM_COPYDATA:
         {
-			ret = ::CallWindowProc(wndProcNotepad, hWnd, message, wParam, lParam);
+			const LRESULT ret = ::CallWindowProc(wndProcNotepad, hWnd, message, wParam, lParam);
 			OutputDebugStringA("WM_COPYDATA\n");
 			SystemUpdate();
             pCurHexEdit->SetStatusBar();
@@ -769,7 +798,7 @@ LRESULT CALLBACK SubWndProcNotepad(HWND hWnd, UINT message, WPARAM wParam, LPARA
 			/* necessary for focus change between main and second SCI handle */
 			if (HIWORD(wParam) == SCEN_SETFOCUS)
 			{
-				ret = ::CallWindowProc(wndProcNotepad, hWnd, message, wParam, lParam);
+				const LRESULT ret = ::CallWindowProc(wndProcNotepad, hWnd, message, wParam, lParam);
 				OutputDebugStringA("SCEN_SETFOCUS\n");
 				SystemUpdate();
 			}
@@ -868,20 +897,20 @@ LRESULT CALLBACK SubWndProcNotepad(HWND hWnd, UINT message, WPARAM wParam, LPARA
 			{
 				case IDM_FILE_RELOAD:
 				{
-					ret = ::CallWindowProc(wndProcNotepad, hWnd, message, wParam, lParam);
+					LRESULT ret = ::CallWindowProc(wndProcNotepad, hWnd, message, wParam, lParam);
 					pCurHexEdit->SetCompareResult(NULL);
 					return ret;
 				}
 				case IDM_SEARCH_FIND:
 				case IDM_SEARCH_REPLACE:
 				{
-					ret = ::CallWindowProc(wndProcNotepad, hWnd, message, wParam, lParam);
+					LRESULT ret = ::CallWindowProc(wndProcNotepad, hWnd, message, wParam, lParam);
 					g_hFindRepDlg = ::GetActiveWindow();
 					return ret;
 				}
 				case IDM_FILE_SAVE:
 				{
-					ret = ::CallWindowProc(wndProcNotepad, hWnd, message, wParam, lParam);
+					LRESULT ret = ::CallWindowProc(wndProcNotepad, hWnd, message, wParam, lParam);
 					if (::SendMessage(g_HSource, SCI_GETMODIFY, 0, 0) == 0)
 					{
 						pCurHexEdit->ResetModificationState();
@@ -898,7 +927,7 @@ LRESULT CALLBACK SubWndProcNotepad(HWND hWnd, UINT message, WPARAM wParam, LPARA
 					isNotepadCreated = FALSE;
 
 					::SendMessage(nppData._nppHandle, NPPM_GETFULLCURRENTPATH, 0, (LPARAM)oldPath);
-					ret = ::CallWindowProc(wndProcNotepad, hWnd, message, wParam, lParam);
+					LRESULT ret = ::CallWindowProc(wndProcNotepad, hWnd, message, wParam, lParam);
 					::SendMessage(nppData._nppHandle, NPPM_GETFULLCURRENTPATH, 0, (LPARAM)newPath);
 					pCurHexEdit->FileNameChanged(newPath);
 
@@ -919,7 +948,7 @@ LRESULT CALLBACK SubWndProcNotepad(HWND hWnd, UINT message, WPARAM wParam, LPARA
 				case IDM_FILE_CLOSEALL_BUT_CURRENT:
 				case IDM_FILE_NEW:
 				{
-					ret = ::CallWindowProc(wndProcNotepad, hWnd, message, wParam, lParam);
+					LRESULT ret = ::CallWindowProc(wndProcNotepad, hWnd, message, wParam, lParam);
 					OutputDebugStringA("IDC_PREV/NEXT_DOC\n");
 					SystemUpdate();
 					pCurHexEdit->doDialog();
@@ -931,7 +960,7 @@ LRESULT CALLBACK SubWndProcNotepad(HWND hWnd, UINT message, WPARAM wParam, LPARA
 				{
 					tHexProp hexProp = pCurHexEdit->GetHexProp();
 
-					ret = ::CallWindowProc(wndProcNotepad, hWnd, message, wParam, lParam);
+					LRESULT ret = ::CallWindowProc(wndProcNotepad, hWnd, message, wParam, lParam);
 					OutputDebugStringA("TO_ANOTHER_VIEW\n");
 					SystemUpdate();
 					pCurHexEdit->SetHexProp(hexProp);
@@ -941,18 +970,18 @@ LRESULT CALLBACK SubWndProcNotepad(HWND hWnd, UINT message, WPARAM wParam, LPARA
 				}
 				case IDM_VIEW_SWITCHTO_OTHER_VIEW:
 				{
-					ret = ::CallWindowProc(wndProcNotepad, hWnd, message, wParam, lParam);
+					LRESULT ret = ::CallWindowProc(wndProcNotepad, hWnd, message, wParam, lParam);
 					pCurHexEdit->SetStatusBar();
 					return ret;
 				}
 				default:
 					return ::CallWindowProc(wndProcNotepad, hWnd, message, wParam, lParam);
 			}
-			return ret;
+			return FALSE;
 		}
 		case NPPM_DOOPEN:
 		{
-			ret = ::CallWindowProc(wndProcNotepad, hWnd, message, wParam, lParam);
+			const LRESULT ret = ::CallWindowProc(wndProcNotepad, hWnd, message, wParam, lParam);
 			OutputDebugStringA("DOOPEN\n");
 			SystemUpdate();
 			pCurHexEdit->doDialog();
@@ -971,9 +1000,7 @@ LRESULT CALLBACK SubWndProcNotepad(HWND hWnd, UINT message, WPARAM wParam, LPARA
 
 				if (TRUE == pCurHexEdit->GetModificationState())
 				{
-					//ret shouldn't have been modified?
-					assert(ret == 0);
-					return ret;
+					return FALSE;
 				}
 				return ::CallWindowProc(wndProcNotepad, hWnd, message, wParam, lParam);
 			}
@@ -982,7 +1009,7 @@ LRESULT CALLBACK SubWndProcNotepad(HWND hWnd, UINT message, WPARAM wParam, LPARA
 				case TCN_TABDELETE:
 				case TCN_SELCHANGE:
 				{
-					ret = ::CallWindowProc(wndProcNotepad, hWnd, message, wParam, lParam);
+					const LRESULT ret = ::CallWindowProc(wndProcNotepad, hWnd, message, wParam, lParam);
 					OutputDebugStringA("TCN_SELCHANGED\n");
 					SystemUpdate();
 					pCurHexEdit->SetStatusBar();
@@ -992,9 +1019,9 @@ LRESULT CALLBACK SubWndProcNotepad(HWND hWnd, UINT message, WPARAM wParam, LPARA
 				case TCN_TABDROPPEDOUTSIDE:
 				{
 					const HexEdit* const pOldHexEdit = pCurHexEdit;
-					tHexProp hexProp	 = pCurHexEdit->GetHexProp();
+					const tHexProp hexProp = pCurHexEdit->GetHexProp();
 
-					ret = ::CallWindowProc(wndProcNotepad, hWnd, message, wParam, lParam);
+					const LRESULT ret = ::CallWindowProc(wndProcNotepad, hWnd, message, wParam, lParam);
 					OutputDebugStringA("TCN_DROPPED\n");
 					SystemUpdate();
 
@@ -1025,7 +1052,7 @@ LRESULT CALLBACK SubWndProcNotepad(HWND hWnd, UINT message, WPARAM wParam, LPARA
 			return ::CallWindowProc(wndProcNotepad, hWnd, message, wParam, lParam);
 	}
 
-	return ret;
+	return FALSE;
 }
 
 
@@ -1037,7 +1064,7 @@ void SystemUpdate(void)
 	if (isNotepadCreated == FALSE)
 		return;
 
-	OutputDebugString(_T("SystemUpdate\n"));
+	OutputDebugStringA("SystemUpdate\n");
 
 	UINT		oldSC		= currentSC;
 	TCHAR		pszNewPath[MAX_PATH] = { 0 };
@@ -1045,8 +1072,8 @@ void SystemUpdate(void)
 	/* update open files */
 	UpdateCurrentHScintilla();
 	::SendMessage(nppData._nppHandle, NPPM_GETFULLCURRENTPATH, 0, (LPARAM)pszNewPath);
-	INT newOpenDoc1 = (INT)::SendMessage(nppData._nppHandle, NPPM_GETCURRENTDOCINDEX, 0, MAIN_VIEW);
-	INT newOpenDoc2 = (INT)::SendMessage(nppData._nppHandle, NPPM_GETCURRENTDOCINDEX, 0, SUB_VIEW);
+	const INT newOpenDoc1 = (INT)::SendMessage(nppData._nppHandle, NPPM_GETCURRENTDOCINDEX, 0, MAIN_VIEW);
+	const INT newOpenDoc2 = (INT)::SendMessage(nppData._nppHandle, NPPM_GETCURRENTDOCINDEX, 0, SUB_VIEW);
 
 	if ((newOpenDoc1 != openDoc1) || (newOpenDoc2 != openDoc2) || 
 		(_tcscmp(pszNewPath, currentPath) != 0) || (oldSC != currentSC))
@@ -1057,65 +1084,59 @@ void SystemUpdate(void)
 		openDoc2 = newOpenDoc2;
 
 		INT			i = 0;
-		//INT			docCnt1;
-		//INT			docCnt2;
-		//LPCTSTR		*fileNames1;
-		//LPCTSTR		*fileNames2;
 		BOOL		isAllocOk = TRUE;
 		
 		/* update doc information */
 		INT docCnt1		= (INT)::SendMessage(nppData._nppHandle, NPPM_GETNBOPENFILES, 0, (LPARAM)PRIMARY_VIEW);
 		INT docCnt2		= (INT)::SendMessage(nppData._nppHandle, NPPM_GETNBOPENFILES, 0, (LPARAM)SECOND_VIEW);
-		std::unique_ptr<PTSTR[]> fileNames1	= std::make_unique<PTSTR[]>(docCnt1);
-		std::unique_ptr<PTSTR[]> fileNames2	= std::make_unique<PTSTR[]>(docCnt2);
+		
+		
+		//dropped std::unique_ptr/operator new[] because exception safety is hard with
+		//and array of raw pointers, even with a std::unique_ptr<std::unique_ptr<PTSTR>[]>
+		//std::unique_ptr<PTSTR[]> fileNames1	= std::make_unique<PTSTR[]>(docCnt1);
+		//std::unique_ptr<PTSTR[]> fileNames2	= std::make_unique<PTSTR[]>(docCnt2);
+		
+		std::vector<PTSTR> fileNames1;
 
-
-		for (i = 0; (i < docCnt1) && (isAllocOk == TRUE); i++) {
-			fileNames1[i] = new TCHAR[MAX_PATH];
-			if ( fileNames1[ i ] == NULL ) {
-				isAllocOk = FALSE;
-				}
+		try {
+			fileNames1.reserve( docCnt1 );
+			allocateVecOfPaths( &fileNames1, docCnt1 );
+			}
+		catch ( std::bad_alloc& ) {
+			return;
 			}
 
-		for (i = 0; (i < docCnt2) && (isAllocOk == TRUE); i++) {
-			fileNames2[i] = new TCHAR[MAX_PATH];
-			if ( fileNames2[ i ] == NULL ) {
-				isAllocOk = FALSE;
-				}
+		std::vector<PTSTR> fileNames2;
+
+		try {
+			fileNames2.reserve( docCnt2 );
+			allocateVecOfPaths( &fileNames2, docCnt2 );
+			}
+		catch ( std::bad_alloc& ) {
+			clearVecOfPaths( &fileNames1 );
+			return;
 			}
 
-		if (isAllocOk == TRUE)
-		{
-			::SendMessage(nppData._nppHandle, NPPM_GETOPENFILENAMESPRIMARY, (WPARAM)fileNames1.get(), (LPARAM)docCnt1);
-			hexEdit1.UpdateDocs(fileNames1.get(), docCnt1, openDoc1);
+		::SendMessage(nppData._nppHandle, NPPM_GETOPENFILENAMESPRIMARY, (WPARAM)fileNames1.data(), (LPARAM)docCnt1);
+		hexEdit1.UpdateDocs(fileNames1.data(), docCnt1, openDoc1);
 
-			::SendMessage(nppData._nppHandle, NPPM_GETOPENFILENAMESSECOND, (WPARAM)fileNames2.get(), (LPARAM)docCnt2);
-			hexEdit2.UpdateDocs(fileNames2.get(), docCnt2, openDoc2);
+		::SendMessage(nppData._nppHandle, NPPM_GETOPENFILENAMESSECOND, (WPARAM)fileNames2.data(), (LPARAM)docCnt2);
+		hexEdit2.UpdateDocs(fileNames2.data(), docCnt2, openDoc2);
 
-			/* update edit */
-			if ( currentSC == MAIN_VIEW ) {
-				pCurHexEdit = &hexEdit1;
-				}
-			else {
-				pCurHexEdit = &hexEdit2;
-				}
-
-			ActivateWindow();
-			setMenu();
-		}
-		for (i = 0; i < docCnt1; i++) {
-			delete[] fileNames1[i];
-			fileNames1[i] = nullptr;
+		/* update edit */
+		if ( currentSC == MAIN_VIEW ) {
+			pCurHexEdit = &hexEdit1;
 			}
-		fileNames1.reset();
-		fileNames1 = nullptr;
-
-		for (i = 0; i < docCnt2; i++) {
-			delete[] fileNames2[i];
-			fileNames2[i] = nullptr;
+		else {
+			pCurHexEdit = &hexEdit2;
 			}
-		fileNames2.reset();
-		fileNames2 = nullptr;
+
+		ActivateWindow();
+		setMenu();
+
+
+		clearVecOfPaths( &fileNames1 );
+		clearVecOfPaths( &fileNames2 );
 	}
 	DialogUpdate();
 }
@@ -1171,31 +1192,22 @@ void DialogUpdate(void)
  */
 BOOL IsExtensionRegistered(LPCTSTR file)
 {
-	BOOL	bRet	= FALSE;
-
-	LPTSTR	TEMP	= new TCHAR[MAX_PATH];
-	LPTSTR	ptr		= NULL;
+	TCHAR TEMP[ MAX_PATH ] = { 0 };
 	PTSTR nextToken = NULL;
-	if (TEMP != NULL)
+
+	_tcscpy_s(TEMP, prop.autoProp.szExtensions);
+
+	PTSTR ptr = _tcstok_s(TEMP, _T(" "), &nextToken);
+	while (ptr != NULL)
 	{
-		_tcscpy_s(TEMP, MAX_PATH, prop.autoProp.szExtensions);
-
-		ptr = _tcstok_s(TEMP, _T(" "), &nextToken);
-		while (ptr != NULL)
+		if (_tcsicmp(&file[_tcslen(file) - _tcslen(ptr)], ptr) == 0)
 		{
-			if (_tcsicmp(&file[_tcslen(file) - _tcslen(ptr)], ptr) == 0)
-			{
-				bRet = TRUE;
-				break;
-			}
-			ptr = _tcstok_s(NULL, _T(" "), &nextToken);
+			return TRUE;
+			break;
 		}
-
-		delete[] TEMP;
-		TEMP = nullptr;
+		ptr = _tcstok_s(NULL, _T(" "), &nextToken);
 	}
-
-	return bRet;
+	return FALSE;
 }
 
 BOOL IsPercentReached(LPCTSTR file)
@@ -1205,53 +1217,55 @@ BOOL IsPercentReached(LPCTSTR file)
 
 	/* return if value is not between 1 - 99 */
 	if ((dwPercent < 1) || (dwPercent >= 100))
-		return bRet;
+		return FALSE;
 
 	/* open file if exists */
 	HANDLE	hFile	= ::CreateFile(file, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 
     if (hFile == INVALID_HANDLE_VALUE)
-		return bRet;
+		return FALSE;
 
 	/* calculate the count of necessary zeros */
 	DWORD	dwMax		= (AUTOSTART_MAX * dwPercent) / 100;
 
 	/* create buffer and read from file */
 	DWORD	dwBytesRead	= 0;
-	LPBYTE	pReadBuffer	= new BYTE[AUTOSTART_MAX];
+	
+	PBYTE buff_temp = new(std::nothrow)BYTE[AUTOSTART_MAX];
+	if ( buff_temp == NULL ) {
+		::CloseHandle(hFile);
+		return FALSE;
+		}
 
-	if (pReadBuffer != NULL)
+	std::unique_ptr<BYTE[ ]> pReadBuffer( buff_temp );
+	buff_temp = nullptr;
+
+	::ZeroMemory(pReadBuffer.get(), AUTOSTART_MAX);
+
+	const BOOL readFileRes = ::ReadFile( hFile, pReadBuffer.get( ), AUTOSTART_MAX, &dwBytesRead, NULL );
+	if ( readFileRes == FALSE ) {
+		return FALSE;
+		}
+
+	/* check for coding */
+	if (((pReadBuffer[0] != 0xFF) && (pReadBuffer[1] != 0xFE)) &&
+		((pReadBuffer[0] != 0xFE) && (pReadBuffer[1] != 0xFF)) &&
+		((pReadBuffer[0] != 0xEF) && (pReadBuffer[1] != 0xBB) && (pReadBuffer[2] != 0xBF)))
 	{
-		::ZeroMemory(pReadBuffer, AUTOSTART_MAX);
+		DWORD dwCount = 0;
 
-		if(::ReadFile(hFile, pReadBuffer, AUTOSTART_MAX, &dwBytesRead, NULL) != FALSE)
+		for (DWORD i = 0; i < dwBytesRead; i++)
 		{
-			/* check for coding */
-			if (((pReadBuffer[0] != 0xFF) && (pReadBuffer[1] != 0xFE)) &&
-				((pReadBuffer[0] != 0xFE) && (pReadBuffer[1] != 0xFF)) &&
-				((pReadBuffer[0] != 0xEF) && (pReadBuffer[1] != 0xBB) && (pReadBuffer[2] != 0xBF)))
-			{
-				DWORD	dwCount	= 0;
-
-				for (DWORD i = 0; i < dwBytesRead; i++)
-				{
-					if ((pReadBuffer[i] < 0x20) && (pReadBuffer[i] != '\t') &&
-						(pReadBuffer[i] != '\r') && (pReadBuffer[i] != '\n')) {
-						dwCount++;
-					}
-					if (dwCount >= dwMax) {
-						bRet = TRUE;
-						break;
-					}
-				}
+			if ((pReadBuffer[i] < 0x20) && (pReadBuffer[i] != '\t') &&
+				(pReadBuffer[i] != '\r') && (pReadBuffer[i] != '\n')) {
+				dwCount++;
+			}
+			if (dwCount >= dwMax) {
+				return TRUE;
 			}
 		}
-		delete[] pReadBuffer;
-		pReadBuffer = nullptr;
 	}
-	::CloseHandle(hFile);
-
-	return bRet;
+	return FALSE;
 }
 
 void ChangeClipboardDataToHex(_Inout_ tClipboard *clipboard)
@@ -1284,7 +1298,6 @@ BOOL LittleEndianChange(_In_ HWND hTarget, _In_ HWND hSource, _Inout_ LPINT offs
 	BOOL		bRet	= FALSE;
 	UINT		lenSrc  = 0;
 	UINT		lenCpy	= 0;
-	LPSTR		buffer  = NULL;
 	INT			posBeg	= *offset;
 	INT			posEnd	= *offset + *length;
 
@@ -1306,78 +1319,85 @@ BOOL LittleEndianChange(_In_ HWND hTarget, _In_ HWND hSource, _Inout_ LPINT offs
 	if (*length <= FIND_BLOCK)
 	{
 		/* create a buffer to copy data */
-		buffer = new CHAR[(posEnd - posBeg) + 1];
+		assert( posEnd >= posBeg );
+		const INT bufferSize = ( posEnd - posBeg ) + 1;
+		PSTR buffer_temp = new( std::nothrow )CHAR[];
+		if ( buffer_temp == NULL ) {
+			return FALSE;
+			}
+		std::unique_ptr<_Null_terminated_ CHAR[ ]> buffer( buffer_temp );
+		buffer_temp = nullptr;
 
-		if (buffer != NULL)
+		/* to clear the content of context begin UNDO */
+		::SendMessage(hTarget, SCI_BEGINUNDOACTION, 0, 0);
+		::SendMessage(hTarget, SCI_CLEARALL, 0, 0);
+
+		/* copy text into the buffer */
+		lenCpy = ScintillaGetText(hSource, buffer.get(), posBeg, posEnd);
+		assert( lenCpy <= bufferSize );
+
+		/* convert when property is little */
+		if (hexProp.isLittle == TRUE)
 		{
-			/* to clear the content of context begin UNDO */
-			::SendMessage(hTarget, SCI_BEGINUNDOACTION, 0, 0);
-			::SendMessage(hTarget, SCI_CLEARALL, 0, 0);
+			std::unique_ptr<_Null_terminated_ CHAR[]> temp = std::make_unique<CHAR[]>(lenCpy + 1);
+			PSTR pText	= buffer.get();
 
-			/* copy text into the buffer */
-			lenCpy = ScintillaGetText(hSource, buffer, posBeg, posEnd);
-
-			/* convert when property is little */
-			if (hexProp.isLittle == TRUE)
-			{
-				LPSTR temp  = new CHAR[lenCpy + 1];
-				LPSTR pText	= buffer;
-
-				/* it must be unsigned */
-				for (UINT i = 0; i < lenCpy; i++) {
-					temp[i] = buffer[i];
-				}
-
-				const UINT innerOffset = (lenCpy) % hexProp.bits;
-				UINT max	= (lenCpy) / hexProp.bits + 1;
-
-				for (UINT i = 1; i <= max; i++)
-				{
-					if (i == max)
-					{
-						for (UINT j = 1; j <= innerOffset; j++)
-						{
-							*pText = temp[lenCpy-j];
-							pText++;
-						}
-					}
-					else
-					{
-						for (SHORT j = 1; j <= hexProp.bits; j++)
-						{
-							*pText = temp[hexProp.bits*i-j];
-							pText++;
-						}
-					}
-				}
-				*pText = NULL;
-				delete[] temp;
-				temp = nullptr;
+			/* it must be unsigned */
+			for (UINT i = 0; i < lenCpy; i++) {
+				temp[i] = buffer[i];
 			}
 
-			/* add text to target */
-			::SendMessage(hTarget, SCI_ADDTEXT, lenCpy, (LPARAM)buffer);
-			::SendMessage(hTarget, SCI_ENDUNDOACTION, 0, 0);
+			const UINT innerOffset = (lenCpy) % hexProp.bits;
+			const UINT max	= (lenCpy) / hexProp.bits + 1;
 
-			/* everything is fine, set return values */
-			*offset = posBeg;
-			*length = posEnd - posBeg;
-			bRet = TRUE;
+			for (UINT i = 1; i <= max; i++)
+			{
+				if (i == max)
+				{
+					for (UINT j = 1; j <= innerOffset; j++)
+					{
+						assert( lenCpy >= j );
+						*pText = temp[lenCpy-j];
+						pText++;
+					}
+				}
+				else
+				{
+					for (SHORT j = 1; j <= hexProp.bits; j++)
+					{
+						*pText = temp[hexProp.bits*i-j];
+						pText++;
+					}
+				}
+			}
+			*pText = NULL;
 		}
-		delete[] buffer;
-		buffer = nullptr;
+
+		/* add text to target */
+		::SendMessage(hTarget, SCI_ADDTEXT, lenCpy, (LPARAM)buffer.get());
+		::SendMessage(hTarget, SCI_ENDUNDOACTION, 0, 0);
+
+		/* everything is fine, set return values */
+		*offset = posBeg;
+		*length = posEnd - posBeg;
+		return TRUE;
 	}
 	return bRet;
 }
 
 eError replaceLittleToBig(HWND hTarget, HWND hSource, INT startSrc, INT startTgt, INT lengthOld, INT lengthNew)
 {
-	tHexProp hexProp;
+	tHexProp hexProp_temp;
 
-	if (currentSC == MAIN_VIEW)
-		hexProp = hexEdit1.GetHexProp();
-	else
-		hexProp = hexEdit2.GetHexProp();
+	if ( currentSC == MAIN_VIEW ) {
+		hexProp_temp = hexEdit1.GetHexProp( );
+		}
+	else {
+		hexProp_temp = hexEdit2.GetHexProp( );
+		}
+
+
+	const tHexProp hexProp = hexProp_temp;
 
 	if (hexProp.isLittle == TRUE)
 	{
@@ -1391,76 +1411,76 @@ eError replaceLittleToBig(HWND hTarget, HWND hSource, INT startSrc, INT startTgt
 		}
 	}
 
-	char*	text = new char[lengthNew+1];
+	//no need for exception handling & stack unwinding
+	//let's handle it ourselves.
+	PCHAR ptr = new( std::nothrow )char[ lengthNew + 1 ];
+	if ( ptr == NULL ) {
+		return E_MEMORY;
+		}
 
-	if (text != NULL)
+	std::unique_ptr<_Null_terminated_ char[]> text(ptr);
+	ptr = NULL;
+
+	if (hSource)
 	{
-		if (hSource)
-		{
-			/* get new text */
-			::SendMessage(hSource, SCI_SETSELECTIONSTART, startSrc, 0);
-			::SendMessage(hSource, SCI_SETSELECTIONEND, startSrc + lengthNew, 0);
-			::SendMessage(hSource, SCI_GETSELTEXT, 0, (LPARAM)text);
-		}
+		/* get new text */
+		::SendMessage(hSource, SCI_SETSELECTIONSTART, startSrc, 0);
+		::SendMessage(hSource, SCI_SETSELECTIONEND, startSrc + lengthNew, 0);
+		::SendMessage(hSource, SCI_GETSELTEXT, 0, (LPARAM)text.get());
+	}
 
-		/* set in target */
-		if (hexProp.isLittle == FALSE)
-		{
-			ScintillaMsg(hTarget, SCI_SETTARGETSTART, startTgt);
-			ScintillaMsg(hTarget, SCI_SETTARGETEND, startTgt + lengthOld);
-			ScintillaMsg(hTarget, SCI_REPLACETARGET, lengthNew, (LPARAM)text);
-		}
-		else
-		{
-			INT		length	  = (lengthOld < lengthNew ? lengthNew:lengthOld);
-			INT		posSource = startSrc;
-			INT		posTarget = 0;
-
-			ScintillaMsg(hTarget, SCI_BEGINUNDOACTION);
-
-			for (INT i = 0; i < length; i++)
-			{
-				/* set position of change */
-				posTarget = posSource - (posSource % hexProp.bits) + ((hexProp.bits-1) - (posSource % hexProp.bits)) + startTgt;
-
-				if ((i < lengthOld) && (i < lengthNew))
-				{
-					ScintillaMsg(hTarget, SCI_SETTARGETSTART, posTarget);
-					ScintillaMsg(hTarget, SCI_SETTARGETEND, posTarget + 1);
-					ScintillaMsg(hTarget, SCI_REPLACETARGET, 1, (LPARAM)&text[i]);
-				}
-				else if (i < lengthOld)
-				{
-					/* old string is longer as the new one */
-					ScintillaMsg(hTarget, SCI_SETTARGETSTART, posTarget);
-					ScintillaMsg(hTarget, SCI_SETTARGETEND, posTarget + 1);
-					ScintillaMsg(hTarget, SCI_REPLACETARGET, 0, (LPARAM)'\0');
-
-					if (!((i+1) % hexProp.bits))
-						posSource = startSrc + lengthNew - 1;
-				}
-				else if (i < lengthNew)
-				{
-					/* new string is longer as the old one */
-					ScintillaMsg(hTarget, SCI_SETCURRENTPOS, posTarget - hexProp.bits + 1);
-					ScintillaMsg(hTarget, SCI_ADDTEXT, 1, (LPARAM)&text[i]);
-					if (!((i+1) % hexProp.bits))
-						posSource += hexProp.bits;
-					posSource--;
-				}
-
-				posSource++;
-			}
-
-			ScintillaMsg(hTarget, SCI_ENDUNDOACTION);
-		}
-		delete[] text;
-		text = nullptr;
-
+	/* set in target */
+	if (hexProp.isLittle == FALSE)
+	{
+		ScintillaMsg(hTarget, SCI_SETTARGETSTART, startTgt);
+		ScintillaMsg(hTarget, SCI_SETTARGETEND, startTgt + lengthOld);
+		ScintillaMsg(hTarget, SCI_REPLACETARGET, lengthNew, (LPARAM)text.get());
 		return E_OK;
 	}
 
-	return E_MEMORY;
+	const INT		length	  = (lengthOld < lengthNew ? lengthNew:lengthOld);
+	INT		posSource = startSrc;
+
+	ScintillaMsg(hTarget, SCI_BEGINUNDOACTION);
+
+	for (INT i = 0; i < length; i++)
+	{
+		/* set position of change */
+		const INT posTarget = posSource - (posSource % hexProp.bits) + ((hexProp.bits-1) - (posSource % hexProp.bits)) + startTgt;
+
+		if ((i < lengthOld) && (i < lengthNew))
+		{
+			ScintillaMsg(hTarget, SCI_SETTARGETSTART, posTarget);
+			ScintillaMsg(hTarget, SCI_SETTARGETEND, posTarget + 1);
+			ScintillaMsg(hTarget, SCI_REPLACETARGET, 1, (LPARAM)&text[i]);
+		}
+		else if (i < lengthOld)
+		{
+			/* old string is longer as the new one */
+			ScintillaMsg(hTarget, SCI_SETTARGETSTART, posTarget);
+			ScintillaMsg(hTarget, SCI_SETTARGETEND, posTarget + 1);
+			ScintillaMsg(hTarget, SCI_REPLACETARGET, 0, (LPARAM)'\0');
+			if (!((i + 1) % hexProp.bits)) {
+				posSource = startSrc + lengthNew - 1;
+				}
+		}
+		else if (i < lengthNew)
+		{
+			/* new string is longer as the old one */
+			ScintillaMsg(hTarget, SCI_SETCURRENTPOS, posTarget - hexProp.bits + 1);
+			ScintillaMsg(hTarget, SCI_ADDTEXT, 1, (LPARAM)&text[i]);
+			if (!((i + 1) % hexProp.bits)) {
+				posSource += hexProp.bits;
+				}
+			posSource--;
+		}
+
+		posSource++;
+	}
+
+	ScintillaMsg(hTarget, SCI_ENDUNDOACTION);
+
+	return E_OK;
 }
 
 
@@ -1498,8 +1518,8 @@ void DoCompare(void)
 		
 	if (cmpResult.hFile != INVALID_HANDLE_VALUE)
 	{
-		LPSTR	buffer1 = new CHAR[COMP_BLOCK+1];
-		LPSTR	buffer2 = new CHAR[COMP_BLOCK+1];
+		std::unique_ptr<_Null_terminated_ CHAR[]> buffer1 = std::make_unique<CHAR[]>(COMP_BLOCK+1);
+		std::unique_ptr<_Null_terminated_ CHAR[]> buffer2 = std::make_unique<CHAR[]>(COMP_BLOCK+1);
 
 		/* get text size to comapre */
 		INT		maxLength1 = ScintillaMsg(nppData._scintillaMainHandle, SCI_GETTEXTLENGTH) + 1;
@@ -1522,8 +1542,8 @@ void DoCompare(void)
 			INT	    length1	= ((maxLength1 - curPos) > COMP_BLOCK ? COMP_BLOCK : (maxLength1 % COMP_BLOCK));
 			INT	    length2	= ((maxLength2 - curPos) > COMP_BLOCK ? COMP_BLOCK : (maxLength2 % COMP_BLOCK));
 
-		    ScintillaGetText(nppData._scintillaMainHandle, buffer1, curPos, length1 - 1);
-            ScintillaGetText(nppData._scintillaSecondHandle, buffer2, curPos, length2 - 1);
+		    ScintillaGetText(nppData._scintillaMainHandle, buffer1.get(), curPos, length1 - 1);
+            ScintillaGetText(nppData._scintillaSecondHandle, buffer2.get(), curPos, length2 - 1);
 
 			while ((posSrc < length1) && (posSrc < length2))
 			{
@@ -1569,31 +1589,16 @@ void DoCompare(void)
             }
 
             /* create two structures for each view */
-			tCmpResult* pCmpResult1 = new tCmpResult;
-			tCmpResult* pCmpResult2 = new tCmpResult;
+			std::unique_ptr<tCmpResult> pCmpResult1 = std::make_unique<tCmpResult>();
+			std::unique_ptr<tCmpResult> pCmpResult2 = std::make_unique<tCmpResult>();
 
-            if ((pCmpResult1 != NULL) && (pCmpResult2 != NULL))
-            {
-                /* set data */
-			    *pCmpResult1 = cmpResult;
-			    *pCmpResult2 = cmpResult;
+            /* set data */
+			*pCmpResult1 = cmpResult;
+			*pCmpResult2 = cmpResult;
 
-                hexEdit1.SetCompareResult(pCmpResult1, pCmpResult2);
-                hexEdit2.SetCompareResult(pCmpResult2, pCmpResult1);
-            }
-            else
-            {
-		        delete pCmpResult1;
-				pCmpResult1 = nullptr;
-		        delete pCmpResult2;
-				pCmpResult2 = nullptr;
-            }
+            hexEdit1.SetCompareResult(pCmpResult1.get(), pCmpResult2.get());
+            hexEdit2.SetCompareResult(pCmpResult2.get(), pCmpResult1.get());
 		}
-
-		delete[] buffer1;
-		buffer1 = nullptr;
-		delete [] buffer2;
-		buffer2 = nullptr;
 	}
 }
 
