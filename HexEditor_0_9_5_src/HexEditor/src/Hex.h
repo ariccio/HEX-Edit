@@ -315,7 +315,7 @@ BOOL IsPercentReached(LPCTSTR file);
 void ChangeClipboardDataToHex(_Inout_ tClipboard *clipboard);
 
 _Success_( return == TRUE )
-BOOL LittleEndianChange(_In_ HWND hTarget, _In_ HWND hSource, _Out_ LPINT offset, _Out_ LPINT length);
+BOOL LittleEndianChange(_In_ HWND hTarget, _In_ HWND hSource, _Inout_ LPINT offset, _Inout_ LPINT length);
 
 eError replaceLittleToBig(HWND hTarget, HWND hSource, INT startSrc, INT startTgt, INT lengthOld, INT lengthNew);
 

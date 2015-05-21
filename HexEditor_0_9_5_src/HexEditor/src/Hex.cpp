@@ -736,7 +736,7 @@ void openHelpDlg(void)
  */
 LRESULT CALLBACK SubWndProcNotepad(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-	LRESULT			ret = 0;
+	LRESULT ret = 0;
 
 	switch (message)
 	{
@@ -753,15 +753,15 @@ LRESULT CALLBACK SubWndProcNotepad(HWND hWnd, UINT message, WPARAM wParam, LPARA
 				::SendMessage(hexEdit1.getHSelf(), message, ~wParam, lParam);
 				::SendMessage(hexEdit2.getHSelf(), message, wParam, lParam);
 			}
-			break;
+			return ret;
 		}
         case WM_COPYDATA:
         {
 			ret = ::CallWindowProc(wndProcNotepad, hWnd, message, wParam, lParam);
-			OutputDebugString(_T("WM_COPYDATA\n"));
+			OutputDebugStringA("WM_COPYDATA\n");
 			SystemUpdate();
             pCurHexEdit->SetStatusBar();
-            break;
+			return ret;
         }
 		case WM_COMMAND:
 		{
@@ -769,11 +769,11 @@ LRESULT CALLBACK SubWndProcNotepad(HWND hWnd, UINT message, WPARAM wParam, LPARA
 			if (HIWORD(wParam) == SCEN_SETFOCUS)
 			{
 				ret = ::CallWindowProc(wndProcNotepad, hWnd, message, wParam, lParam);
-				OutputDebugString(_T("SCEN_SETFOCUS\n"));
+				OutputDebugStringA("SCEN_SETFOCUS\n");
 				SystemUpdate();
 			}
 
-			if (pCurHexEdit->isVisible() == true)
+			if (pCurHexEdit->isVisible())
 			{
 				switch (LOWORD(wParam))
 				{
@@ -846,7 +846,7 @@ LRESULT CALLBACK SubWndProcNotepad(HWND hWnd, UINT message, WPARAM wParam, LPARA
 					case IDM_SEARCH_DELETEMARKEDLINES:
 						pCurHexEdit->DeleteBookmarkLines();
 						return TRUE;
-					/* ignore this messages */
+					/* ignore these messages */
 					case IDM_EDIT_LINE_UP:
 					case IDM_EDIT_LINE_DOWN:
 					case IDM_EDIT_DUP_LINE:
@@ -869,14 +869,14 @@ LRESULT CALLBACK SubWndProcNotepad(HWND hWnd, UINT message, WPARAM wParam, LPARA
 				{
 					ret = ::CallWindowProc(wndProcNotepad, hWnd, message, wParam, lParam);
 					pCurHexEdit->SetCompareResult(NULL);
-					break;
+					return ret;
 				}
 				case IDM_SEARCH_FIND:
 				case IDM_SEARCH_REPLACE:
 				{
 					ret = ::CallWindowProc(wndProcNotepad, hWnd, message, wParam, lParam);
 					g_hFindRepDlg = ::GetActiveWindow();
-					break;
+					return ret;
 				}
 				case IDM_FILE_SAVE:
 				{
@@ -885,7 +885,7 @@ LRESULT CALLBACK SubWndProcNotepad(HWND hWnd, UINT message, WPARAM wParam, LPARA
 					{
 						pCurHexEdit->ResetModificationState();
 					}
-					break;
+					return ret;
 				}
 				case IDM_FILE_SAVEAS:
 				case IDM_FILE_RENAME:
@@ -909,7 +909,7 @@ LRESULT CALLBACK SubWndProcNotepad(HWND hWnd, UINT message, WPARAM wParam, LPARA
 					{
 						pCurHexEdit->ResetModificationState();
 					}
-					break;
+					return ret;
 				}
 				case IDC_PREV_DOC:
 				case IDC_NEXT_DOC:
@@ -919,11 +919,11 @@ LRESULT CALLBACK SubWndProcNotepad(HWND hWnd, UINT message, WPARAM wParam, LPARA
 				case IDM_FILE_NEW:
 				{
 					ret = ::CallWindowProc(wndProcNotepad, hWnd, message, wParam, lParam);
-					OutputDebugString(_T("IDC_PREV/NEXT_DOC\n"));
+					OutputDebugStringA("IDC_PREV/NEXT_DOC\n");
 					SystemUpdate();
 					pCurHexEdit->doDialog();
 					pCurHexEdit->SetStatusBar();
-					break;
+					return ret;
 				}
 				case IDM_VIEW_GOTO_ANOTHER_VIEW:
 				case IDM_VIEW_CLONE_TO_ANOTHER_VIEW:
@@ -931,46 +931,50 @@ LRESULT CALLBACK SubWndProcNotepad(HWND hWnd, UINT message, WPARAM wParam, LPARA
 					tHexProp hexProp = pCurHexEdit->GetHexProp();
 
 					ret = ::CallWindowProc(wndProcNotepad, hWnd, message, wParam, lParam);
-					OutputDebugString(_T("TO_ANOTHER_VIEW\n"));
+					OutputDebugStringA("TO_ANOTHER_VIEW\n");
 					SystemUpdate();
 					pCurHexEdit->SetHexProp(hexProp);
 					pCurHexEdit->doDialog();
 					pCurHexEdit->SetStatusBar();
-					break;
+					return ret;
 				}
 				case IDM_VIEW_SWITCHTO_OTHER_VIEW:
 				{
 					ret = ::CallWindowProc(wndProcNotepad, hWnd, message, wParam, lParam);
 					pCurHexEdit->SetStatusBar();
-					break;
+					return ret;
 				}
 				default:
-					ret = ::CallWindowProc(wndProcNotepad, hWnd, message, wParam, lParam);
-					break;
+					return ::CallWindowProc(wndProcNotepad, hWnd, message, wParam, lParam);
 			}
-			break;
+			return ret;
 		}
 		case NPPM_DOOPEN:
 		{
 			ret = ::CallWindowProc(wndProcNotepad, hWnd, message, wParam, lParam);
-			OutputDebugString(_T("DOOPEN\n"));
+			OutputDebugStringA("DOOPEN\n");
 			SystemUpdate();
 			pCurHexEdit->doDialog();
-			break;
+			return ret;
 		}
 		case WM_NOTIFY:
 		{
-			SCNotification *notifyCode = (SCNotification *)lParam;
+			const SCNotification* const notifyCode = reinterpret_cast<const SCNotification*>(lParam);
 
 			if (((notifyCode->nmhdr.hwndFrom == nppData._scintillaMainHandle) ||
 				(notifyCode->nmhdr.hwndFrom == nppData._scintillaSecondHandle)) &&
 				(notifyCode->nmhdr.code == SCN_SAVEPOINTREACHED))
 			{
-				OutputDebugString(_T("SAVEPOINTREACHED\n"));
+				OutputDebugStringA("SAVEPOINTREACHED\n");
 				SystemUpdate();
-				if (TRUE != pCurHexEdit->GetModificationState())
-					ret = ::CallWindowProc(wndProcNotepad, hWnd, message, wParam, lParam);
-				break;
+
+				if (TRUE == pCurHexEdit->GetModificationState())
+				{
+					//ret shouldn't have been modified?
+					assert(ret == 0);
+					return ret;
+				}
+				return ::CallWindowProc(wndProcNotepad, hWnd, message, wParam, lParam);
 			}
 			switch (notifyCode->nmhdr.code)
 			{
@@ -978,46 +982,46 @@ LRESULT CALLBACK SubWndProcNotepad(HWND hWnd, UINT message, WPARAM wParam, LPARA
 				case TCN_SELCHANGE:
 				{
 					ret = ::CallWindowProc(wndProcNotepad, hWnd, message, wParam, lParam);
-					OutputDebugString(_T("TCN_SELCHANGED\n"));
+					OutputDebugStringA("TCN_SELCHANGED\n");
 					SystemUpdate();
 					pCurHexEdit->SetStatusBar();
-					break;
+					return ret;
 				}
 				case TCN_TABDROPPED:
 				case TCN_TABDROPPEDOUTSIDE:
 				{
-					HexEdit* pOldHexEdit = pCurHexEdit;
+					const HexEdit* const pOldHexEdit = pCurHexEdit;
 					tHexProp hexProp	 = pCurHexEdit->GetHexProp();
 
 					ret = ::CallWindowProc(wndProcNotepad, hWnd, message, wParam, lParam);
-					OutputDebugString(_T("TCN_DROPPED\n"));
+					OutputDebugStringA("TCN_DROPPED\n");
 					SystemUpdate();
 
 					if (pOldHexEdit != pCurHexEdit)
 					{
-						if (pCurHexEdit == &hexEdit1)
-						{
-							hexEdit2.doDialog();
-						}
-						else
-						{
-							hexEdit1.doDialog();
-						}
-						pCurHexEdit->SetHexProp(hexProp);
-						pCurHexEdit->doDialog();
-						pCurHexEdit->SetStatusBar();
+						return ret;
 					}
-					break;
+
+					if (pCurHexEdit == &hexEdit1)
+					{
+						hexEdit2.doDialog();
+					}
+					else
+					{
+						hexEdit1.doDialog();
+					}
+					pCurHexEdit->SetHexProp(hexProp);
+					pCurHexEdit->doDialog();
+					pCurHexEdit->SetStatusBar();
+					return ret;
 				}
 				default:
-					ret = ::CallWindowProc(wndProcNotepad, hWnd, message, wParam, lParam);
-					break;
+					return ::CallWindowProc(wndProcNotepad, hWnd, message, wParam, lParam);
 			}
 			break;
 		}
 		default:
-			ret = ::CallWindowProc(wndProcNotepad, hWnd, message, wParam, lParam);
-			break;
+			return ::CallWindowProc(wndProcNotepad, hWnd, message, wParam, lParam);
 	}
 
 	return ret;
@@ -1273,7 +1277,7 @@ void ChangeClipboardDataToHex(_Inout_ tClipboard *clipboard)
 }
 
 _Success_( return == TRUE )
-BOOL LittleEndianChange(_In_ HWND hTarget, _In_ HWND hSource, _Out_ LPINT offset, _Out_ LPINT length)
+BOOL LittleEndianChange(_In_ HWND hTarget, _In_ HWND hSource, _Inout_ LPINT offset, _Inout_ LPINT length)
 {
 	if ((hTarget == NULL) || (hSource == NULL) || (offset == NULL) || (length == NULL))
 		return FALSE;
