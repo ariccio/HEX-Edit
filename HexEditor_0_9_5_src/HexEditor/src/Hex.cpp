@@ -1069,56 +1069,53 @@ void SystemUpdate(void)
 		std::unique_ptr<PTSTR[]> fileNames1	= std::make_unique<PTSTR[]>(docCnt1);
 		std::unique_ptr<PTSTR[]> fileNames2	= std::make_unique<PTSTR[]>(docCnt2);
 
-		if ((fileNames1 != NULL) && (fileNames2 != NULL))
+
+		for (i = 0; (i < docCnt1) && (isAllocOk == TRUE); i++) {
+			fileNames1[i] = new TCHAR[MAX_PATH];
+			if ( fileNames1[ i ] == NULL ) {
+				isAllocOk = FALSE;
+				}
+			}
+
+		for (i = 0; (i < docCnt2) && (isAllocOk == TRUE); i++) {
+			fileNames2[i] = new TCHAR[MAX_PATH];
+			if ( fileNames2[ i ] == NULL ) {
+				isAllocOk = FALSE;
+				}
+			}
+
+		if (isAllocOk == TRUE)
 		{
-			for (i = 0; (i < docCnt1) && (isAllocOk == TRUE); i++) {
-				fileNames1[i] = new TCHAR[MAX_PATH];
-				if (fileNames1[i] == NULL)
-					isAllocOk = FALSE;
-			}
-			for (i = 0; (i < docCnt2) && (isAllocOk == TRUE); i++) {
-				fileNames2[i] = new TCHAR[MAX_PATH];
-				if (fileNames2[i] == NULL)
-					isAllocOk = FALSE;
-			}
+			::SendMessage(nppData._nppHandle, NPPM_GETOPENFILENAMESPRIMARY, (WPARAM)fileNames1.get(), (LPARAM)docCnt1);
+			hexEdit1.UpdateDocs(fileNames1.get(), docCnt1, openDoc1);
 
-			if (isAllocOk == TRUE)
-			{
-				::SendMessage(nppData._nppHandle, NPPM_GETOPENFILENAMESPRIMARY, (WPARAM)fileNames1.get(), (LPARAM)docCnt1);
-				hexEdit1.UpdateDocs(fileNames1.get(), docCnt1, openDoc1);
+			::SendMessage(nppData._nppHandle, NPPM_GETOPENFILENAMESSECOND, (WPARAM)fileNames2.get(), (LPARAM)docCnt2);
+			hexEdit2.UpdateDocs(fileNames2.get(), docCnt2, openDoc2);
 
-				::SendMessage(nppData._nppHandle, NPPM_GETOPENFILENAMESSECOND, (WPARAM)fileNames2.get(), (LPARAM)docCnt2);
-				hexEdit2.UpdateDocs(fileNames2.get(), docCnt2, openDoc2);
-
-				/* update edit */
-				if (currentSC == MAIN_VIEW)
-					pCurHexEdit = &hexEdit1;
-				else
-					pCurHexEdit = &hexEdit2;
-
-				ActivateWindow();
-				setMenu();
-			}
-
-			if (fileNames1 != NULL)
-			{
-				for (i = 0; i < docCnt1; i++) {
-					delete[] fileNames1[i];
-					fileNames1[i] = nullptr;
+			/* update edit */
+			if ( currentSC == MAIN_VIEW ) {
+				pCurHexEdit = &hexEdit1;
 				}
-				fileNames1.reset();
-				fileNames1 = nullptr;
-			}
-			if (fileNames2 != NULL)
-			{
-				for (i = 0; i < docCnt2; i++) {
-					delete[] fileNames2[i];
-					fileNames2[i] = nullptr;
+			else {
+				pCurHexEdit = &hexEdit2;
 				}
-				fileNames2.reset();
-				fileNames2 = nullptr;
-			}
+
+			ActivateWindow();
+			setMenu();
 		}
+		for (i = 0; i < docCnt1; i++) {
+			delete[] fileNames1[i];
+			fileNames1[i] = nullptr;
+			}
+		fileNames1.reset();
+		fileNames1 = nullptr;
+
+		for (i = 0; i < docCnt2; i++) {
+			delete[] fileNames2[i];
+			fileNames2[i] = nullptr;
+			}
+		fileNames2.reset();
+		fileNames2 = nullptr;
 	}
 	DialogUpdate();
 }
