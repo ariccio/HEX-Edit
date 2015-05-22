@@ -1465,7 +1465,7 @@ void HexEdit::Paste(void)
 				{
 					isOk = FALSE;
 					TCHAR	TEMP[256];
-					_stprintf_s(TEMP, _T("%S %d\n"), buffer, ASCIIConvert(buffer.get())/0x10);
+					_stprintf_s(TEMP, _T("%S %d\n"), buffer.get(), ASCIIConvert(buffer.get())/0x10);
 					OutputDebugString(TEMP);
 				}
 			}

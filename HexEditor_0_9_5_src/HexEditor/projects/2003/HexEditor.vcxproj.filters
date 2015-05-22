@@ -170,6 +170,9 @@
     <ClInclude Include="..\..\..\NativeLang\src\NativeLang_def.h">
       <Filter>Header Files\if_def_files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\TypesafeMemset.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\..\src\HEXDialog.rc">

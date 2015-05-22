@@ -169,6 +169,7 @@
     <ClInclude Include="..\..\src\OptionDlg\OptionDialog.h" />
     <ClInclude Include="..\..\src\resource.h" />
     <ClInclude Include="..\..\src\tables.h" />
+    <ClInclude Include="..\..\src\TypesafeMemset.h" />
     <ClInclude Include="..\..\src\UserDlg\CompareDialog.h" />
     <ClInclude Include="..\..\src\UserDlg\FindReplaceDialog.h" />
     <ClInclude Include="..\..\src\UserDlg\GotoDialog.h" />

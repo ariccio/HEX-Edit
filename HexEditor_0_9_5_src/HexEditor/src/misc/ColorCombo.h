@@ -43,7 +43,7 @@ struct COMBOBOXINFO
 class ColorCombo : public Window
 {
 public :
-	ColorCombo() : Window(), _rgbCol(0), _pColorPopup(NULL) {
+	ColorCombo() : Window(), _rgbCol(0) {
 		::ZeroMemory(&_comboBoxInfo, sizeof(_comboBoxInfo));
 	};
     ~ColorCombo () {};

@@ -142,7 +142,7 @@ private:
 	tComboInfo			_find;
 	tComboInfo			_replace;
 	std::unique_ptr<MultiTypeCombo> _pFindCombo;
-	std::unique_ptr<MultiTypeCombo>		_pReplaceCombo;
+	std::unique_ptr<MultiTypeCombo> _pReplaceCombo;
 
 
 	/* for transparency */
