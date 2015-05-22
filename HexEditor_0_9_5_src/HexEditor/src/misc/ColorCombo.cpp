@@ -43,8 +43,7 @@ LRESULT ColorCombo::runProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 		{
 			setColor((COLORREF)wParam);
 			_pColorPopup->destroy();
-            delete _pColorPopup;
-			_pColorPopup = NULL;
+            _pColorPopup.reset();
             return TRUE;
 		}
 		case WM_LBUTTONDOWN:
@@ -57,7 +56,7 @@ LRESULT ColorCombo::runProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 			pt.y = rc.bottom;
 
 			if (_pColorPopup == NULL) {
-				_pColorPopup = new ColorPopup(_rgbCol);
+				_pColorPopup.reset( new ColorPopup(_rgbCol) );
 				_pColorPopup->init(_hInst, hwnd, _hNpp);
 				_pColorPopup->doDialog(pt);
 			}
@@ -69,8 +68,7 @@ LRESULT ColorCombo::runProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 			if (_pColorPopup != NULL) {
 				_pColorPopup->destroy();
 			}
-			delete _pColorPopup;
-			_pColorPopup = NULL;
+			_pColorPopup.reset();
 			break;
 		}
         case WM_PAINT:

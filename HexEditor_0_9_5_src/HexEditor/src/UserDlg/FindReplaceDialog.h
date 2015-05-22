@@ -20,6 +20,7 @@
 
 #include "StaticDialog.h"
 #include <algorithm>
+#include <memory>
 #include <commctrl.h>
 
 #include "Hex.h"
@@ -140,8 +141,8 @@ private:
 
 	tComboInfo			_find;
 	tComboInfo			_replace;
-	MultiTypeCombo*		_pFindCombo;
-	MultiTypeCombo*		_pReplaceCombo;
+	std::unique_ptr<MultiTypeCombo> _pFindCombo;
+	std::unique_ptr<MultiTypeCombo>		_pReplaceCombo;
 
 
 	/* for transparency */

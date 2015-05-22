@@ -30,6 +30,8 @@
 #include "tables.h"
 #include "SysMsg.h"
 #include "ModifyMenu.h"
+#include "TypesafeMemset.h"
+
 #include <stdlib.h>
 
 #include <shlwapi.h>
@@ -77,7 +79,8 @@ namespace {
 		return;
 		}
 
-	void allocateVecOfPaths( _Inout_ std::vector<PTSTR>* const vectorPaths, _In_ const INT docCnt ) {
+	void allocateVecOfPaths( _Inout_ std::vector<PTSTR>* const vectorPaths, _In_ _In_range_( 0, INT_MAX ) const INT docCnt ) {
+		vectorPaths->reserve( vectorPaths->size( ) + static_cast<size_t>( docCnt ) );
 		for (INT i = 0; i < docCnt; i++) {
 			try {
 				PTSTR newPtr = new TCHAR[ MAX_PATH ];
@@ -175,6 +178,7 @@ BOOL APIENTRY DllMain( HANDLE hModule,
 			if ( funcItem[ 0 ]._pShKey == NULL ) {
 				return FALSE;
 				}
+
 			funcItem[0]._pShKey->_isAlt		= true;
 			funcItem[0]._pShKey->_isCtrl	= true;
 			funcItem[0]._pShKey->_isShift	= true;
@@ -189,7 +193,7 @@ BOOL APIENTRY DllMain( HANDLE hModule,
 			funcItem[8]._pShKey				= NULL;
 
 			g_hFindRepDlg     = NULL;
-			memset(&g_clipboard, 0, sizeof(tClipboard));
+			templated_helpers::memset_zero_struct( &g_clipboard );
 			break;
 		}	
 		case DLL_PROCESS_DETACH:
@@ -811,7 +815,12 @@ LRESULT CALLBACK SubWndProcNotepad(HWND hWnd, UINT message, WPARAM wParam, LPARA
 						pCurHexEdit->Cut();
 						return TRUE;
 					case IDM_EDIT_COPY:
-						pCurHexEdit->Copy();
+						try {
+							pCurHexEdit->Copy( );
+							}
+						catch ( std::bad_alloc& ) {
+							::MessageBox(NULL, _T("Copy failed! Couldn't allocate memory."), _T("HexEdit/Explorer"), MB_OK | MB_ICONERROR);
+							}
 						return TRUE;
 					case IDM_EDIT_PASTE:
 						pCurHexEdit->Paste();
@@ -1270,22 +1279,23 @@ BOOL IsPercentReached(LPCTSTR file)
 
 void ChangeClipboardDataToHex(_Inout_ tClipboard *clipboard)
 {
-	char*	text	= clipboard->text;
-	INT		length	= clipboard->length;
+	PSTR	text	= clipboard->text;
+	const INT		length	= clipboard->length;
 
 	clipboard->length	= length * 3;
-	clipboard->text		= new char[clipboard->length+1];
+	clipboard->text		= new(std::nothrow)char[clipboard->length+1];
+	if ( clipboard->text == NULL ) {
 
-	if (clipboard->text != NULL)
-	{
-		strcpy_s(clipboard->text, clipboard->length+1, hexMask[(UCHAR)text[0]]);
-		for (INT i = 1; i < length; i++)
-		{
-			strcat_s(clipboard->text, clipboard->length+1, " ");
-			strcat_s(clipboard->text, clipboard->length+1, hexMask[(UCHAR)text[i]]);
+		return;
 		}
-		clipboard->text[clipboard->length] = 0;
+
+	strcpy_s(clipboard->text, clipboard->length+1, hexMask[(UCHAR)text[0]]);
+	for (INT i = 1; i < length; i++)
+	{
+		strcat_s(clipboard->text, clipboard->length+1, " ");
+		strcat_s(clipboard->text, clipboard->length+1, hexMask[(UCHAR)text[i]]);
 	}
+	clipboard->text[clipboard->length] = 0;
 }
 
 _Success_( return == TRUE )

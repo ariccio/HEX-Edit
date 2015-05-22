@@ -52,7 +52,7 @@ class HexEdit : public StaticDialog, private SciSubClassWrp
 {
 public:
 	HexEdit(void);
-	~HexEdit(void);
+	~HexEdit( void ) = default;
     void init(HINSTANCE hInst, NppData nppData, LPCTSTR iniFilePath);
 
 	void destroy(void)

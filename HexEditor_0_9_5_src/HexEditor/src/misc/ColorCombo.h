@@ -22,6 +22,7 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
 #include "Window.h"
 #include "ColorPopup.h"
+#include <memory>
 
 #if(WINVER <= 0x0400)
 struct COMBOBOXINFO 
@@ -74,7 +75,7 @@ private :
     WNDPROC					_hDefaultComboProc;
     
     COLORREF                _rgbCol;
-	ColorPopup*				_pColorPopup;
+	std::unique_ptr<ColorPopup> _pColorPopup;
 
 	/* Subclassing combo boxes */
 	LRESULT runProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam);

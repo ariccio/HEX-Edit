@@ -205,8 +205,8 @@ void FindReplaceDlg::initDialog(void)
 	::SendDlgItemMessage(_hSelf, IDC_SWITCH, TCM_INSERTITEM, 1, (LPARAM)&item);
 
 	/* init comboboxes */
-	_pFindCombo			= new MultiTypeCombo;
-	_pReplaceCombo		= new MultiTypeCombo;
+	_pFindCombo.reset( new MultiTypeCombo );
+	_pReplaceCombo.reset( new MultiTypeCombo );
 
 	_pFindCombo->init(_hParent, ::GetDlgItem(_hSelf, IDC_COMBO_FIND));
 	_pReplaceCombo->init(_hParent, ::GetDlgItem(_hSelf, IDC_COMBO_REPLACE));
@@ -507,39 +507,41 @@ void FindReplaceDlg::onReplace(void)
 	lenStr = length;
 	if (LittleEndianChange(_hSCI, hSciSrc, &offset, &length) == TRUE)
 	{
-		LPSTR	text	= new CHAR[lenStr+1];
 
-		if (text != NULL)
-		{
-			/* get selection and compare if it is equal to expected text */
-			ScintillaMsg(_hSCI, SCI_SETSELECTIONSTART, posBeg - offset, 0);
-			ScintillaMsg(_hSCI, SCI_SETSELECTIONEND, posEnd - offset, 0);
-    		ScintillaMsg(_hSCI, SCI_GETSELTEXT, 0, (LPARAM)text);
+		PSTR text_temp = new(std::nothrow)CHAR[ lenStr + 1 ];
+		if ( text_temp == NULL ) {
+			CleanScintillaBuf(_hSCI);
+			return;
+			}
+		std::unique_ptr<_Null_terminated_ CHAR[]> text( text_temp );
+		text_temp = nullptr;
 
-			/* make difference between match case modes */
-    		if (((_isMatchCase == TRUE) && (memcmp(text, _find.text, lenStr) == 0)) ||
-				((_isMatchCase == FALSE) && (_stricmp(text, _find.text) == 0)))
+		/* get selection and compare if it is equal to expected text */
+		ScintillaMsg(_hSCI, SCI_SETSELECTIONSTART, posBeg - offset, 0);
+		ScintillaMsg(_hSCI, SCI_SETSELECTIONEND, posEnd - offset, 0);
+    	ScintillaMsg(_hSCI, SCI_GETSELTEXT, 0, (LPARAM)text.get());
+
+		/* make difference between match case modes */
+    	if (((_isMatchCase == TRUE) && (memcmp(text.get(), _find.text, lenStr) == 0)) ||
+			((_isMatchCase == FALSE) && (_stricmp(text.get(), _find.text) == 0)))
+    	{
+    		ScintillaMsg(_hSCI, SCI_TARGETFROMSELECTION);
+    		ScintillaMsg(_hSCI, SCI_REPLACETARGET, _replace.length, (LPARAM)&_replace.text);
+    		isRep = replaceLittleToBig(hSciSrc, _hSCI, posBeg - offset, posBeg, lenStr, _replace.length);
+    		if (isRep == E_OK)
     		{
-    			ScintillaMsg(_hSCI, SCI_TARGETFROMSELECTION);
-    			ScintillaMsg(_hSCI, SCI_REPLACETARGET, _replace.length, (LPARAM)&_replace.text);
-    			isRep = replaceLittleToBig(hSciSrc, _hSCI, posBeg - offset, posBeg, lenStr, _replace.length);
-    			if (isRep == E_OK)
-    			{
-    				::SendMessage(_hParentHandle, HEXM_SETPOS, 0, posBeg + _replace.length);
-    				_pFindCombo->addText(_find);
-    				_pReplaceCombo->addText(_replace);
-    			}
+    			::SendMessage(_hParentHandle, HEXM_SETPOS, 0, posBeg + _replace.length);
+    			_pFindCombo->addText(_find);
+    			_pReplaceCombo->addText(_replace);
     		}
+    	}
 
-    		if (isRep == E_OK) {
-    			onFind(FALSE);
-    		} else {
-    			LITTLE_REPLACE_ERROR;
-    		}
+    	if (isRep == E_OK) {
+    		onFind(FALSE);
+    	} else {
+    		LITTLE_REPLACE_ERROR;
+    	}
 
-    		delete[] text;
-			text = nullptr;
-		}
    		CleanScintillaBuf(_hSCI);
 	}
 }
@@ -782,24 +784,27 @@ void FindReplaceDlg::getSelText(tComboInfo* info)
 
 	if (info->length != 0)
 	{
-		CHAR	*text	= new CHAR[info->length+1];
-		if (text != NULL)
-		{
-			/* convert and select and get the text */
-			if (LittleEndianChange(_hSCI, getCurrentHScintilla(), &offset, &length) == TRUE)
-			{
-				ScintillaMsg(_hSCI, SCI_SETSELECTIONSTART, posBeg - offset, 0);
-				ScintillaMsg(_hSCI, SCI_SETSELECTIONEND, posEnd - offset, 0);
-				ScintillaMsg(_hSCI, SCI_TARGETFROMSELECTION, 0, 0);
-				ScintillaMsg(_hSCI, SCI_GETSELTEXT, 0, (LPARAM)text);
-
-				/* encode the text in dependency of selected data type */
-				memcpy(info->text, text, info->length);
-
-				CleanScintillaBuf(_hSCI);
+		PSTR text_temp = new(std::nothrow)CHAR[info->length+1];
+		if ( text_temp == NULL ) {
+			return;
 			}
-			delete[] text;
-			text = nullptr;
+
+		std::unique_ptr<_Null_terminated_ CHAR[ ]> text( text_temp );
+		text_temp = nullptr;
+
+
+		/* convert and select and get the text */
+		if (LittleEndianChange(_hSCI, getCurrentHScintilla(), &offset, &length) == TRUE)
+		{
+			ScintillaMsg(_hSCI, SCI_SETSELECTIONSTART, posBeg - offset, 0);
+			ScintillaMsg(_hSCI, SCI_SETSELECTIONEND, posEnd - offset, 0);
+			ScintillaMsg(_hSCI, SCI_TARGETFROMSELECTION, 0, 0);
+			ScintillaMsg(_hSCI, SCI_GETSELTEXT, 0, (LPARAM)text.get());
+
+			/* encode the text in dependency of selected data type */
+			memcpy_s(info->text, sizeof( info->text ), text.get(), info->length);
+
+			CleanScintillaBuf(_hSCI);
 		}
 	}
 }
